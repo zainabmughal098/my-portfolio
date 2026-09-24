@@ -12,12 +12,14 @@ import {
   Tablet,
   Monitor,
   Maximize2,
-  LayoutTemplate
+  LayoutTemplate,
+  FileText,
+  Globe2,
 } from 'lucide-react';
 import { PRESETS_LIST } from '../data/presets';
 import { PortfolioData } from '../types/portfolio';
 
-export type ViewMode = 'split' | 'editor' | 'preview' | 'themes' | 'export';
+export type ViewMode = 'split' | 'editor' | 'preview' | 'themes' | 'resume' | 'seo' | 'export';
 export type DeviceMode = 'desktop' | 'tablet' | 'mobile' | 'responsive';
 
 interface NavbarProps {
@@ -123,6 +125,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Themes</span>
+          </button>
+          <button
+            onClick={() => onSelectViewMode('resume')}
+            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
+              viewMode === 'resume' ? 'bg-slate-800 text-white font-medium shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="ATS Resume & Printable CV View"
+          >
+            <FileText className="w-3.5 h-3.5 text-blue-400" />
+            <span className="hidden lg:inline">Resume</span>
+          </button>
+          <button
+            onClick={() => onSelectViewMode('seo')}
+            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
+              viewMode === 'seo' ? 'bg-slate-800 text-white font-medium shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Social Share & OpenGraph Cards"
+          >
+            <Globe2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden xl:inline">Social SEO</span>
           </button>
         </div>
 

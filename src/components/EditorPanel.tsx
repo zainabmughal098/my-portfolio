@@ -3,6 +3,7 @@ import {
   PortfolioData,
   ProjectItem,
   ExperienceItem,
+  EducationItem,
   SkillCategory,
   StatItem,
   TestimonialItem,
@@ -13,6 +14,7 @@ import {
   Briefcase,
   Layers,
   Wrench,
+  GraduationCap,
   BarChart3,
   MessageSquare,
   Mail,
@@ -26,7 +28,9 @@ import {
   EyeOff,
   MoveUp,
   MoveDown,
+  Upload,
 } from 'lucide-react';
+import { ImagePickerModal } from './ImagePickerModal';
 
 interface EditorPanelProps {
   data: PortfolioData;
@@ -37,6 +41,7 @@ type EditorTab =
   | 'profile'
   | 'projects'
   | 'experience'
+  | 'education'
   | 'skills'
   | 'stats'
   | 'testimonials'
@@ -45,6 +50,7 @@ type EditorTab =
 
 export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
   const [activeTab, setActiveTab] = useState<EditorTab>('profile');
+  const [pickerTarget, setPickerTarget] = useState<{ type: 'avatar' } | { type: 'project'; id: string } | null>(null);
 
   // Helpers for updating personal
   const updatePersonal = (field: string, val: any) => {
@@ -65,6 +71,35 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
     onChange({
       ...data,
       contact: { ...data.contact, [field]: val },
+    });
+  };
+
+  // Education management
+  const addEducation = () => {
+    const newEdu: EducationItem = {
+      id: `edu-${Date.now()}`,
+      institution: 'University / Institute',
+      degree: 'B.S. / M.S. in Computer Science or Design',
+      period: '2018 — 2022',
+      location: 'City, Country',
+    };
+    onChange({
+      ...data,
+      education: [...(data.education || []), newEdu],
+    });
+  };
+
+  const updateEducation = (id: string, field: keyof EducationItem, val: string) => {
+    onChange({
+      ...data,
+      education: (data.education || []).map((e) => (e.id === id ? { ...e, [field]: val } : e)),
+    });
+  };
+
+  const removeEducation = (id: string) => {
+    onChange({
+      ...data,
+      education: (data.education || []).filter((e) => e.id !== id),
     });
   };
 
@@ -219,6 +254,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
     { id: 'profile', label: 'Profile & Bio', icon: <User className="w-3.5 h-3.5" /> },
     { id: 'projects', label: `Projects (${data.projects.length})`, icon: <Briefcase className="w-3.5 h-3.5" /> },
     { id: 'experience', label: `Timeline (${data.experiences.length})`, icon: <Layers className="w-3.5 h-3.5" /> },
+    { id: 'education', label: `Education (${(data.education || []).length})`, icon: <GraduationCap className="w-3.5 h-3.5" /> },
     { id: 'skills', label: 'Skills & Stack', icon: <Wrench className="w-3.5 h-3.5" /> },
     { id: 'stats', label: 'Metrics', icon: <BarChart3 className="w-3.5 h-3.5" /> },
     { id: 'testimonials', label: 'Endorsements', icon: <MessageSquare className="w-3.5 h-3.5" /> },
@@ -343,15 +379,23 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Avatar / Portrait Image URL</label>
+              <label className="block text-xs font-semibold text-slate-400 mb-1">Avatar / Portrait Image</label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={data.personal.avatarUrl}
                   onChange={(e) => updatePersonal('avatarUrl', e.target.value)}
-                  placeholder="https://... or paste image URL"
+                  placeholder="https://... or click Choose / Upload"
                   className="flex-1 px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white focus:outline-none focus:border-blue-500"
                 />
+                <button
+                  type="button"
+                  onClick={() => setPickerTarget({ type: 'avatar' })}
+                  className="px-3 py-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Choose / Upload</span>
+                </button>
                 {data.personal.avatarUrl && (
                   <img
                     src={data.personal.avatarUrl}
@@ -499,14 +543,25 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">Image URL</label>
-                      <input
-                        type="text"
-                        value={proj.imageUrl}
-                        onChange={(e) => updateProject(proj.id, 'imageUrl', e.target.value)}
-                        placeholder="Image path or URL"
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
-                      />
+                      <label className="block text-[11px] text-slate-400 mb-1">Project Visual Asset</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={proj.imageUrl}
+                          onChange={(e) => updateProject(proj.id, 'imageUrl', e.target.value)}
+                          placeholder="Image URL or upload"
+                          className="flex-1 px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPickerTarget({ type: 'project', id: proj.id })}
+                          className="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1 shrink-0 border border-slate-700 transition-colors"
+                          title="Pick preset or upload custom image"
+                        >
+                          <Upload className="w-3 h-3" />
+                          <span>Choose</span>
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[11px] text-slate-400 mb-1">Tags (comma separated)</label>
@@ -652,6 +707,85 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
                       }
                       className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
                     />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* EDUCATION TAB */}
+        {activeTab === 'education' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-white">Education & Credentials</h3>
+                <p className="text-xs text-slate-400">Degrees, academic history, and professional certifications.</p>
+              </div>
+              <button
+                onClick={addEducation}
+                className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Education</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {(data.education || []).map((edu) => (
+                <div key={edu.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div className="text-sm font-bold text-white">{edu.degree}</div>
+                    <button
+                      onClick={() => removeEducation(edu.id)}
+                      className="p-1 text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Degree / Course</label>
+                      <input
+                        type="text"
+                        value={edu.degree}
+                        onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Institution</label>
+                      <input
+                        type="text"
+                        value={edu.institution}
+                        onChange={(e) => updateEducation(edu.id, 'institution', e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Timeline</label>
+                      <input
+                        type="text"
+                        value={edu.period}
+                        onChange={(e) => updateEducation(edu.id, 'period', e.target.value)}
+                        placeholder="2018 — 2022"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">Location / Honors</label>
+                      <input
+                        type="text"
+                        value={edu.location || ''}
+                        onChange={(e) => updateEducation(edu.id, 'location', e.target.value)}
+                        placeholder="Cambridge, MA (Summa Cum Laude)"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -922,6 +1056,46 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
                     className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">YouTube / Video Channel</label>
+                  <input
+                    type="text"
+                    value={data.socials.youtube || ''}
+                    onChange={(e) => updateSocials('youtube', e.target.value)}
+                    placeholder="https://youtube.com/@..."
+                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Instagram</label>
+                  <input
+                    type="text"
+                    value={data.socials.instagram || ''}
+                    onChange={(e) => updateSocials('instagram', e.target.value)}
+                    placeholder="https://instagram.com/..."
+                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Figma Profile / Community</label>
+                  <input
+                    type="text"
+                    value={data.socials.figma || ''}
+                    onChange={(e) => updateSocials('figma', e.target.value)}
+                    placeholder="https://figma.com/@..."
+                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Medium / Blog Publication</label>
+                  <input
+                    type="text"
+                    value={data.socials.medium || ''}
+                    onChange={(e) => updateSocials('medium', e.target.value)}
+                    placeholder="https://medium.com/@..."
+                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -963,6 +1137,20 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
           </div>
         )}
       </div>
+
+      {/* Image Picker / Uploader Modal */}
+      <ImagePickerModal
+        isOpen={pickerTarget !== null}
+        onClose={() => setPickerTarget(null)}
+        title={pickerTarget?.type === 'avatar' ? 'Select or Upload Avatar Image' : 'Select or Upload Project Image'}
+        onSelectImage={(url) => {
+          if (pickerTarget?.type === 'avatar') {
+            updatePersonal('avatarUrl', url);
+          } else if (pickerTarget?.type === 'project') {
+            updateProject(pickerTarget.id, 'imageUrl', url);
+          }
+        }}
+      />
     </div>
   );
 };

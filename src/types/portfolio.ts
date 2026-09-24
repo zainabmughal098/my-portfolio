@@ -8,12 +8,21 @@ export type BorderRadius = 'none' | 'sm' | 'md' | 'lg';
 
 export type LayoutDensity = 'compact' | 'comfortable' | 'spacious';
 
-export type SectionKey = 'hero' | 'about' | 'projects' | 'experience' | 'skills' | 'testimonials' | 'contact';
+export type SectionKey = 'hero' | 'about' | 'projects' | 'experience' | 'skills' | 'education' | 'testimonials' | 'contact';
 
 export interface SectionConfig {
   id: SectionKey;
   title: string;
   enabled: boolean;
+}
+
+export interface EducationItem {
+  id: string;
+  institution: string;
+  degree: string;
+  period: string;
+  location?: string;
+  honors?: string;
 }
 
 export interface StatItem {
@@ -71,6 +80,10 @@ export interface SocialLinks {
   twitter?: string;
   dribbble?: string;
   substack?: string;
+  medium?: string;
+  youtube?: string;
+  instagram?: string;
+  figma?: string;
   website?: string;
   email?: string;
 }
@@ -113,6 +126,7 @@ export interface PortfolioData {
   stats: StatItem[];
   projects: ProjectItem[];
   experiences: ExperienceItem[];
+  education?: EducationItem[];
   skills: SkillCategory[];
   testimonials: TestimonialItem[];
   contact: ContactInfo;

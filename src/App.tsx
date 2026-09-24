@@ -8,6 +8,8 @@ import { PortfolioRenderer } from './components/PortfolioRenderer';
 import { DeviceFrame } from './components/DeviceFrame';
 import { ExportModal } from './components/ExportModal';
 import { GitHubModal } from './components/GitHubModal';
+import { ResumeView } from './components/ResumeView';
+import { SocialSharePreview } from './components/SocialSharePreview';
 import { generateStandaloneHtml } from './utils/exportHtml';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v1';
@@ -127,6 +129,20 @@ export default function App() {
               theme={data.theme}
               onChangeTheme={(updated) => setData({ ...data, theme: updated })}
             />
+          </div>
+        )}
+
+        {/* ATS RESUME & PRINTABLE CV VIEW */}
+        {viewMode === 'resume' && (
+          <div className="w-full h-full overflow-y-auto bg-slate-950">
+            <ResumeView data={data} onBack={() => setViewMode('split')} />
+          </div>
+        )}
+
+        {/* SOCIAL SHARE & OPENGRAPH PREVIEW */}
+        {viewMode === 'seo' && (
+          <div className="w-full h-full overflow-y-auto bg-slate-950 p-4">
+            <SocialSharePreview data={data} />
           </div>
         )}
       </div>
