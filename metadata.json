@@ -1,0 +1,7 @@
+{
+  "name": "FolioCraft - Professional Portfolio Builder",
+  "description": "Create, customize, and export stunning personal portfolios with customizable themes, live responsive preview, project showcases, and one-click standalone HTML export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
