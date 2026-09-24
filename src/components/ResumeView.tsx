@@ -27,6 +27,12 @@ import {
   Maximize2,
   Minimize2,
   FileDown,
+  Layout,
+  Terminal,
+  BookOpen,
+  Award,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface ResumeViewProps {
@@ -45,6 +51,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
   const [spacing, setSpacing] = useState<ResumeSpacing>(data.resumeConfig?.spacing || 'normal');
   const [fontSize, setFontSize] = useState<'compact' | 'standard' | 'large'>(data.resumeConfig?.fontSize || 'standard');
   const [accentColor, setAccentColor] = useState<string>(data.resumeConfig?.accentColor || '#1d4ed8');
+  const [showTemplateGallery, setShowTemplateGallery] = useState(true);
 
   // Section visibility toggles
   const [showSummary, setShowSummary] = useState(data.resumeConfig?.showSummary ?? true);
@@ -293,8 +300,101 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
           </div>
         </div>
 
-        {/* Dynamic Controls Grid: Template, Page Target, Spacing, Density */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+        {/* VISUAL TEMPLATE GALLERY CARDS */}
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Layout className="w-3.5 h-3.5 text-blue-400" />
+              <span>Select Resume Template</span>
+            </label>
+            <button
+              onClick={() => setShowTemplateGallery(!showTemplateGallery)}
+              className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold"
+            >
+              <span>{showTemplateGallery ? 'Hide Gallery' : 'Show All Templates'}</span>
+              {showTemplateGallery ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          </div>
+
+          {showTemplateGallery && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                {
+                  id: 'modern' as ResumeTemplateId,
+                  title: 'Modern Minimalist',
+                  tag: 'Most Popular',
+                  badgeClass: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+                  icon: <Layout className="w-4 h-4 text-blue-400" />,
+                  desc: 'Clean accent divider line, modern sans-serif typography, and balanced 2-column project grid.',
+                },
+                {
+                  id: 'tech' as ResumeTemplateId,
+                  title: 'Tech & Systems Architect',
+                  tag: 'Engineers & DevOps',
+                  badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+                  icon: <Terminal className="w-4 h-4 text-emerald-400" />,
+                  desc: 'Core stack & capabilities front-and-center, monospace tags, live GitHub code & demo links.',
+                },
+                {
+                  id: 'editorial' as ResumeTemplateId,
+                  title: 'Editorial Elegance',
+                  tag: 'Designers & Writers',
+                  badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+                  icon: <BookOpen className="w-4 h-4 text-amber-400" />,
+                  desc: 'Sophisticated serif headlines, centered classic header, and chronological case study narrative.',
+                },
+                {
+                  id: 'classic' as ResumeTemplateId,
+                  title: 'Harvard / Ivy League Standard',
+                  tag: '100% ATS Optimized',
+                  badgeClass: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
+                  icon: <Award className="w-4 h-4 text-purple-400" />,
+                  desc: 'Timeless black & white Ivy League layout, centered contact row, uppercase underlined sections.',
+                },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setTemplate(opt.id)}
+                  className={`relative p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between cursor-pointer ${
+                    template === opt.id
+                      ? 'bg-blue-950/40 border-blue-500 shadow-md ring-1 ring-blue-500'
+                      : 'bg-slate-950 border-slate-800 hover:border-slate-700 hover:bg-slate-900/60'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-1.5 rounded-lg bg-slate-900 border border-slate-800">
+                        {opt.icon}
+                      </div>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${opt.badgeClass}`}>
+                        {opt.tag}
+                      </span>
+                    </div>
+                    <div className="font-bold text-xs text-white">{opt.title}</div>
+                    <p className="text-[11px] text-slate-400 mt-1 leading-snug">{opt.desc}</p>
+                  </div>
+
+                  <div className="pt-3 mt-2 border-t border-slate-800/80 flex items-center justify-between">
+                    {template === opt.id ? (
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-blue-400">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Active Template</span>
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-slate-500 font-medium group-hover:text-slate-300">
+                        Select Template &rarr;
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Dynamic Controls Grid: Template Dropdown, Page Target, Spacing, Density */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-1 border-t border-slate-800/80">
           {/* 1. Template Choice */}
           <div className="space-y-1.5">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">

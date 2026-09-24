@@ -96,7 +96,11 @@ export default function App() {
         {viewMode === 'split' && (
           <>
             <div className="w-[450px] xl:w-[480px] shrink-0 h-full border-r border-slate-800">
-              <EditorPanel data={data} onChange={setData} />
+              <EditorPanel
+                data={data}
+                onChange={setData}
+                onOpenResume={() => setViewMode('resume')}
+              />
             </div>
             <div className="flex-1 h-full bg-slate-950 overflow-hidden">
               <DeviceFrame deviceMode={deviceMode}>
@@ -109,7 +113,11 @@ export default function App() {
         {/* FULL EDITOR VIEW */}
         {viewMode === 'editor' && (
           <div className="w-full max-w-5xl mx-auto h-full">
-            <EditorPanel data={data} onChange={setData} />
+            <EditorPanel
+              data={data}
+              onChange={setData}
+              onOpenResume={() => setViewMode('resume')}
+            />
           </div>
         )}
 

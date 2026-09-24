@@ -129,12 +129,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => onSelectViewMode('resume')}
             className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
-              viewMode === 'resume' ? 'bg-slate-800 text-white font-medium shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              viewMode === 'resume' ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-800'
             }`}
-            title="ATS Resume & Printable CV View"
+            title="Choose Resume Templates, 1-Page/2-Page Options & PDF Download"
           >
             <FileText className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden lg:inline">Resume</span>
+            <span className="font-medium">Resume & Templates</span>
           </button>
           <button
             onClick={() => onSelectViewMode('seo')}
