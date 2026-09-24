@@ -135,7 +135,7 @@ export default function App() {
         {/* ATS RESUME & PRINTABLE CV VIEW */}
         {viewMode === 'resume' && (
           <div className="w-full h-full overflow-y-auto bg-slate-950">
-            <ResumeView data={data} onBack={() => setViewMode('split')} />
+            <ResumeView data={data} onChangeData={setData} onBack={() => setViewMode('split')} />
           </div>
         )}
 

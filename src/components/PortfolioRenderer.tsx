@@ -336,6 +336,22 @@ export const PortfolioRenderer: React.FC<PortfolioRendererProps> = ({
                       <span>{personal.email || contact.email || socials.email}</span>
                     </a>
                   )}
+
+                  {data.customLinks &&
+                    data.customLinks.map((cl) => (
+                      <React.Fragment key={cl.id}>
+                        <span aria-hidden="true">·</span>
+                        <a
+                          href={cl.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="hover:text-current transition-colors flex items-center gap-1"
+                        >
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                          <span>{cl.label}</span>
+                        </a>
+                      </React.Fragment>
+                    ))}
                 </div>
               </div>
 

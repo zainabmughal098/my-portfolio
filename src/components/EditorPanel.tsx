@@ -1097,6 +1097,74 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange }) => {
                   />
                 </div>
               </div>
+
+              {/* Custom Links section */}
+              <div className="pt-4 border-t border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Custom Portfolio & Resume Links</h4>
+                    <p className="text-[11px] text-slate-400">Add any additional links (e.g. LeetCode, Behance, Google Scholar, Kaggle).</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newL = { id: `link-${Date.now()}`, label: 'New Link', url: 'https://' };
+                      onChange({ ...data, customLinks: [...(data.customLinks || []), newL] });
+                    }}
+                    className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Add Link</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {(data.customLinks || []).map((cl) => (
+                    <div key={cl.id} className="flex items-center gap-2 bg-slate-900 p-2 rounded-md border border-slate-800">
+                      <input
+                        type="text"
+                        value={cl.label}
+                        onChange={(e) => {
+                          onChange({
+                            ...data,
+                            customLinks: (data.customLinks || []).map((l) =>
+                              l.id === cl.id ? { ...l, label: e.target.value } : l
+                            ),
+                          });
+                        }}
+                        placeholder="Label (e.g. LeetCode)"
+                        className="w-32 px-2 py-1 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      />
+                      <input
+                        type="text"
+                        value={cl.url}
+                        onChange={(e) => {
+                          onChange({
+                            ...data,
+                            customLinks: (data.customLinks || []).map((l) =>
+                              l.id === cl.id ? { ...l, url: e.target.value } : l
+                            ),
+                          });
+                        }}
+                        placeholder="https://..."
+                        className="flex-1 px-2 py-1 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChange({
+                            ...data,
+                            customLinks: (data.customLinks || []).filter((l) => l.id !== cl.id),
+                          });
+                        }}
+                        className="p-1 text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}

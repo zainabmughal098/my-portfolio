@@ -118,11 +118,34 @@ export interface ThemeSettings {
   layoutDensity: LayoutDensity;
 }
 
+export type ResumeTemplateId = 'modern' | 'tech' | 'editorial' | 'classic';
+export type ResumePageTarget = 1 | 2;
+export type ResumeSpacing = 'compact' | 'normal' | 'spacious';
+
+export interface CustomLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
+export interface ResumeConfig {
+  template: ResumeTemplateId;
+  pageTarget: ResumePageTarget;
+  spacing: ResumeSpacing;
+  fontSize: 'compact' | 'standard' | 'large';
+  showProjects: boolean;
+  showEducation: boolean;
+  showSkills: boolean;
+  showSummary: boolean;
+  accentColor: string;
+}
+
 export interface PortfolioData {
   id: string;
   name: string;
   personal: PersonalInfo;
   socials: SocialLinks;
+  customLinks?: CustomLink[];
   stats: StatItem[];
   projects: ProjectItem[];
   experiences: ExperienceItem[];
@@ -132,4 +155,5 @@ export interface PortfolioData {
   contact: ContactInfo;
   sections: SectionConfig[];
   theme: ThemeSettings;
+  resumeConfig?: ResumeConfig;
 }
