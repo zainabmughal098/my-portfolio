@@ -114,17 +114,4 @@ Make sure you have [Node.js](https://nodejs.org/) (v18 or higher) installed on y
 
 ---
 
-## 🌐 Deploying to Vercel
 
-1. Push your repository to GitHub:
-   ```bash
-   git add .
-   git commit -m "Deploy FolioCraft to production"
-   git push origin main
-   ```
-2. Go to [Vercel](https://vercel.com/) and click **"Add New Project"**.
-3. Import your GitHub repository.
-4. Framework Preset will automatically detect **Vite**.
-5. Click **"Deploy"** — your live link will be ready in under a minute!
-
----
