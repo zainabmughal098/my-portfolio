@@ -33,6 +33,8 @@ interface NavbarProps {
   onOpenGithubSync: () => void;
   onPrint: () => void;
   onReset: () => void;
+  onStartBlank?: () => void;
+  onLoadDemo?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -46,11 +48,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenGithubSync,
   onPrint,
   onReset,
+  onStartBlank,
+  onLoadDemo,
 }) => {
   return (
     <header className="no-print h-14 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 flex items-center justify-between text-xs text-slate-300 select-none z-30">
-      {/* Zone 1: Brand title */}
-      <div className="flex items-center gap-3">
+      {/* Zone 1: Brand title & Presets */}
+      <div className="flex items-center gap-2.5">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm shadow-sm">
             F
@@ -72,6 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               if (selected) onSelectPreset(selected);
             }}
             className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+            title="Switch between Blank Canvas and Example Profiles"
           >
             {PRESETS_LIST.map((preset) => (
               <option key={preset.id} value={preset.id}>
@@ -80,6 +85,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </select>
         </div>
+
+        {onStartBlank && (
+          <button
+            onClick={onStartBlank}
+            className="hidden xl:flex items-center gap-1 px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors"
+            title="Start fresh with a clean, blank portfolio"
+          >
+            <span>✨ Clean Canvas</span>
+          </button>
+        )}
       </div>
 
       {/* Zone 2: View modes & Device selectors */}

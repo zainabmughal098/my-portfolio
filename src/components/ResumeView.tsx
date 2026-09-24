@@ -33,7 +33,12 @@ import {
   Award,
   ChevronDown,
   ChevronUp,
+  Download,
+  Loader2,
+  HelpCircle,
 } from 'lucide-react';
+import html2canvas from 'html2canvas-pro';
+import { jsPDF } from 'jspdf';
 
 interface ResumeViewProps {
   data: PortfolioData;
@@ -68,6 +73,8 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
   const resumeRef = useRef<HTMLDivElement>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number>(0);
   const [copied, setCopied] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [downloadSuccessMessage, setDownloadSuccessMessage] = useState<string | null>(null);
 
   // Measure content height whenever template, content, spacing, or font size changes
   useEffect(() => {
@@ -106,8 +113,125 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
   const isOverflowing =
     pageTarget === 1 ? measuredHeight > PAGE_HEIGHT_PX + 20 : measuredHeight > PAGE_HEIGHT_PX * 2 + 30;
 
+  // Real client-side PDF file download via html2canvas-pro (native oklch support) & jsPDF
+  const handleDownloadPdf = async () => {
+    if (!resumeRef.current) return;
+    setIsGeneratingPdf(true);
+    setDownloadSuccessMessage(null);
+
+    const safeName = (personal.name || 'my').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const filename = `${safeName}-resume.pdf`;
+
+    try {
+      const element = resumeRef.current;
+
+      // Render DOM to high-res canvas via html2canvas-pro (fully supports Tailwind v4 oklch colors)
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+
+      // Standard printable margin
+      const margin = 5;
+      const contentWidth = pdfWidth - margin * 2;
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
+
+      if (pageTarget === 1 || contentHeight <= pdfHeight - margin * 2) {
+        // Fits precisely on 1 page (or auto-scales proportionally to ensure no overflow onto page 2)
+        const fitScale = Math.min(1, (pdfHeight - margin * 2) / contentHeight);
+        const finalW = contentWidth * fitScale;
+        const finalH = contentHeight * fitScale;
+        const xOffset = margin + (contentWidth - finalW) / 2;
+        pdf.addImage(imgData, 'JPEG', xOffset, margin, finalW, finalH);
+      } else {
+        // 2 or more pages with clean page break slicing
+        let heightLeft = contentHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'JPEG', margin, margin + position, contentWidth, contentHeight);
+        heightLeft -= (pdfHeight - margin * 2);
+
+        while (heightLeft > 8) {
+          position -= (pdfHeight - margin * 2);
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', margin, margin + position, contentWidth, contentHeight);
+          heightLeft -= (pdfHeight - margin * 2);
+        }
+      }
+
+      pdf.save(filename);
+      setDownloadSuccessMessage(`✅ "${filename}" was downloaded directly to your computer! Check your Downloads folder.`);
+      setTimeout(() => setDownloadSuccessMessage(null), 7000);
+    } catch (err: any) {
+      console.error('PDF generation error:', err);
+      // Fallback: download standalone printable HTML resume file
+      handleDownloadHtmlResume();
+      setDownloadSuccessMessage(`Downloaded standalone resume HTML file (open it in browser to print/save as PDF).`);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // Standalone offline HTML resume file download fallback
+  const handleDownloadHtmlResume = () => {
+    if (!resumeRef.current) return;
+    const safeName = (personal.name || 'my').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const filename = `${safeName}-resume.html`;
+    const resumeHtml = resumeRef.current.innerHTML;
+
+    const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${personal.name} - Resume</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      @page { size: A4 portrait; margin: 8mm 10mm; }
+      body { background: white !important; color: black !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 p-4 sm:p-8 flex flex-col items-center">
+  <div class="no-print mb-4 p-3 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow flex items-center gap-3">
+    <span>Press Ctrl+P (or Cmd+P on Mac) and choose "Save as PDF" to save this resume.</span>
+    <button onclick="window.print()" class="px-3 py-1 bg-white text-blue-700 font-bold rounded">Print / Save PDF Now</button>
+  </div>
+  <div class="w-full max-w-[850px] bg-white text-slate-900 shadow-xl border border-slate-300 p-8 sm:p-12">
+    ${resumeHtml}
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handlePrint = () => {
-    window.print();
+    try {
+      window.print();
+    } catch {
+      handleDownloadPdf();
+    }
   };
 
   const handleAutoFit = () => {
@@ -266,10 +390,11 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
             <span className="text-slate-700">|</span>
             <div className="flex items-center gap-1.5 text-xs font-bold text-white">
               <FileDown className="w-4 h-4 text-blue-400" />
-              <span>Resume & CV Engine</span>
+              <span>Resume Studio & PDF Generator</span>
             </div>
           </div>
 
+          {/* Action buttons with real PDF download */}
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopyPlainText}
@@ -279,24 +404,90 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
               {copied ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">Copied Plain Text</span>
+                  <span className="text-emerald-400 font-semibold">Copied!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy ATS Text</span>
+                  <Copy className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="hidden sm:inline">Copy ATS Text</span>
                 </>
               )}
             </button>
 
             <button
               onClick={handlePrint}
-              className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white flex items-center gap-1.5 transition-colors shadow-sm"
-              title="Download or Print as PDF via native browser dialog"
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors"
+              title="Open native browser print dialog"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print / Download PDF</span>
+              <Printer className="w-3.5 h-3.5 text-slate-400" />
+              <span className="hidden sm:inline">Print Dialog</span>
             </button>
+
+            {/* REAL CLIENT-SIDE PDF DOWNLOAD BUTTON */}
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-wait text-xs font-bold text-white flex items-center gap-2 transition-all shadow-md active:scale-95"
+              title="Click here to download your resume as a real PDF file (.pdf)"
+            >
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Generating PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download PDF File</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* SUCCESS NOTIFICATION TOAST */}
+        {downloadSuccessMessage && (
+          <div className="p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-lg text-emerald-200 text-xs flex items-center justify-between animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-semibold">{downloadSuccessMessage}</span>
+            </div>
+            <button
+              onClick={() => setDownloadSuccessMessage(null)}
+              className="text-emerald-400 hover:text-white font-bold text-sm px-1"
+            >
+              &times;
+            </button>
+          </div>
+        )}
+
+        {/* 3-STEP USER GUIDANCE (Ensures zero confusion for any user) */}
+        <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-3 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 text-slate-300">
+            <span className="w-5 h-5 rounded-full bg-blue-600/30 border border-blue-500/50 text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+              1
+            </span>
+            <span>
+              <strong>Pick a Template:</strong> Modern, Tech, Editorial, or Harvard
+            </span>
+          </div>
+          <div className="hidden md:block text-slate-700">&rarr;</div>
+          <div className="flex items-center gap-2 text-slate-300">
+            <span className="w-5 h-5 rounded-full bg-blue-600/30 border border-blue-500/50 text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+              2
+            </span>
+            <span>
+              <strong>Set Target:</strong> Choose 1 Page or 2 Pages (check green status)
+            </span>
+          </div>
+          <div className="hidden md:block text-slate-700">&rarr;</div>
+          <div className="flex items-center gap-2 text-slate-300">
+            <span className="w-5 h-5 rounded-full bg-blue-600/30 border border-blue-500/50 text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+              3
+            </span>
+            <span>
+              Click <strong className="text-blue-400 font-bold">Download PDF File</strong> to save to your computer
+            </span>
           </div>
         </div>
 
@@ -623,10 +814,32 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
                     ? pageTarget === 1
                       ? 'Your resume has too much content for a 1-page layout and will spill onto page 2! Use Auto-Fit or switch to 2 Pages.'
                       : 'Your resume has too much content for 2 pages and will spill onto page 3.'
-                    : `Optimal density! When you click "Print / Download PDF", it will render neatly on ${pageTarget} page${pageTarget > 1 ? 's' : ''}.`}
+                    : `Optimal density! Ready to download neatly as an ATS-friendly ${pageTarget}-page PDF.`}
                 </p>
               </div>
             </div>
+
+            {!isOverflowing && (
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={isGeneratingPdf}
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Generating PDF...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download {pageTarget}-Page PDF</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {isOverflowing && (
               <div className="flex items-center gap-2 shrink-0">
@@ -635,7 +848,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
                   className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Auto-Fit to 1 Page</span>
+                  <span>Auto-Fit into {pageTarget} Page</span>
                 </button>
                 {pageTarget === 1 && (
                   <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PortfolioData } from './types/portfolio';
-import { PRESET_PRODUCT_DESIGNER, PRESETS_LIST } from './data/presets';
+import { BLANK_PORTFOLIO_TEMPLATE, PRESET_PRODUCT_DESIGNER, PRESETS_LIST } from './data/presets';
 import { Navbar, ViewMode, DeviceMode } from './components/Navbar';
 import { EditorPanel } from './components/EditorPanel';
 import { ThemeStudio } from './components/ThemeStudio';
@@ -12,7 +12,7 @@ import { ResumeView } from './components/ResumeView';
 import { SocialSharePreview } from './components/SocialSharePreview';
 import { generateStandaloneHtml } from './utils/exportHtml';
 
-const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v1';
+const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
 
 export default function App() {
   const [data, setData] = useState<PortfolioData>(() => {
@@ -24,7 +24,8 @@ export default function App() {
     } catch (e) {
       console.warn('Failed to parse cached portfolio', e);
     }
-    return PRESET_PRODUCT_DESIGNER;
+    // Default to clean blank template so shared/deployed links don't have confusing fake demo data
+    return BLANK_PORTFOLIO_TEMPLATE;
   });
 
   const [viewMode, setViewMode] = useState<ViewMode>('split');
@@ -47,10 +48,20 @@ export default function App() {
     }
   };
 
-  const handleReset = () => {
-    if (window.confirm('Reset portfolio to the default Product Designer archetype?')) {
+  const handleStartBlank = () => {
+    if (window.confirm('Start fresh with a clean, blank portfolio canvas? Your current inputs will be reset.')) {
+      setData(BLANK_PORTFOLIO_TEMPLATE);
+    }
+  };
+
+  const handleLoadDemo = () => {
+    if (window.confirm('Load sample demo portfolio for design inspiration?')) {
       setData(PRESET_PRODUCT_DESIGNER);
     }
+  };
+
+  const handleReset = () => {
+    handleStartBlank();
   };
 
   const handleDownloadHtml = () => {
@@ -58,10 +69,16 @@ export default function App() {
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    a.style.display = 'none';
     a.href = url;
     a.download = `${data.personal.name.toLowerCase().replace(/\s+/g, '-')}-portfolio.html`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    // Delay revoking URL so browser has time to trigger the download stream
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 2000);
   };
 
   const handlePrint = () => {
@@ -88,6 +105,8 @@ export default function App() {
         onOpenGithubSync={() => setIsGithubOpen(true)}
         onPrint={handlePrint}
         onReset={handleReset}
+        onStartBlank={handleStartBlank}
+        onLoadDemo={handleLoadDemo}
       />
 
       {/* Workspace Body */}
@@ -100,6 +119,8 @@ export default function App() {
                 data={data}
                 onChange={setData}
                 onOpenResume={() => setViewMode('resume')}
+                onStartBlank={handleStartBlank}
+                onLoadDemo={handleLoadDemo}
               />
             </div>
             <div className="flex-1 h-full bg-slate-950 overflow-hidden">
@@ -117,6 +138,8 @@ export default function App() {
               data={data}
               onChange={setData}
               onOpenResume={() => setViewMode('resume')}
+              onStartBlank={handleStartBlank}
+              onLoadDemo={handleLoadDemo}
             />
           </div>
         )}

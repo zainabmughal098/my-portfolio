@@ -465,7 +465,120 @@ export const PRESET_ART_DIRECTOR: PortfolioData = {
   },
 };
 
+export const BLANK_PORTFOLIO_TEMPLATE: PortfolioData = {
+  id: 'preset-blank',
+  name: '✨ Blank Canvas (Start Clean)',
+  personal: {
+    name: 'Your Name',
+    roleTitle: 'Software Engineer & Designer',
+    headline: 'Building thoughtful digital products, clean interfaces, and modern applications.',
+    location: 'City, Country (or Remote)',
+    statusText: 'Open to new opportunities & freelance projects',
+    statusAvailable: true,
+    bioShort: 'A brief 1-2 sentence introduction about what you do, who you are, and what you love building.',
+    bioLong: 'Write a few paragraphs about your background, the tools and technologies you enjoy working with, your philosophy, and what kind of problems you love solving.',
+    avatarUrl: '',
+    resumeUrl: '#resume',
+  },
+  socials: {
+    github: 'https://github.com/your-username',
+    linkedin: 'https://linkedin.com/in/your-username',
+    email: 'you@example.com',
+  },
+  stats: [
+    { id: 'stat-1', value: '2+', label: 'Years Experience', context: 'Software Development' },
+    { id: 'stat-2', value: '10+', label: 'Projects Built', context: 'Web & mobile applications' },
+  ],
+  projects: [
+    {
+      id: 'proj-1',
+      title: 'Featured Web Project',
+      subtitle: 'Modern web application built with React & TypeScript',
+      category: 'Web Application',
+      client: 'Personal Project',
+      year: '2026',
+      description: 'Describe what the project does, the problem it solves, and why you created it.',
+      fullCaseStudy: 'Add in-depth details about how you built this, key architecture choices, and results.',
+      tags: ['React', 'TypeScript', 'Tailwind CSS'],
+      liveUrl: 'https://example.com',
+      githubUrl: 'https://github.com/your-username/project',
+      featured: true,
+      imageUrl: showcaseFintech,
+    },
+  ],
+  experiences: [
+    {
+      id: 'exp-1',
+      role: 'Software Developer',
+      company: 'Company / Organization Name',
+      period: '2024 – Present',
+      location: 'Remote / City',
+      summary: 'Describe your core responsibilities, the team you worked with, and the technologies used.',
+      highlights: [
+        'Built key features and components that improved user experience.',
+        'Collaborated with designers and engineers to deliver projects on time.',
+      ],
+    },
+  ],
+  education: [
+    {
+      id: 'edu-1',
+      degree: 'B.S. in Computer Science',
+      institution: 'Your College or University',
+      period: '2021 – 2025',
+      location: 'City, Country',
+    },
+  ],
+  skills: [
+    {
+      id: 'skill-1',
+      category: 'Frontend & UI',
+      items: ['HTML/CSS', 'JavaScript', 'TypeScript', 'React', 'Tailwind CSS'],
+    },
+    {
+      id: 'skill-2',
+      category: 'Backend & Tools',
+      items: ['Node.js', 'Git & GitHub', 'REST APIs', 'VS Code'],
+    },
+  ],
+  testimonials: [],
+  contact: {
+    heading: 'Get in Touch',
+    description: 'Have a project in mind, an opportunity, or just want to connect? My inbox is always open.',
+    availabilityNote: 'Usually responds within 24 hours.',
+    email: 'you@example.com',
+  },
+  sections: [
+    { id: 'hero', title: 'Hero & Introduction', enabled: true },
+    { id: 'about', title: 'About & Stats', enabled: true },
+    { id: 'projects', title: 'Featured Projects', enabled: true },
+    { id: 'experience', title: 'Work Experience', enabled: true },
+    { id: 'skills', title: 'Skills & Stack', enabled: true },
+    { id: 'testimonials', title: 'Testimonials', enabled: false },
+    { id: 'contact', title: 'Contact', enabled: true },
+  ],
+  theme: {
+    id: 'swiss',
+    accent: 'blue',
+    fontHeading: 'sans',
+    borderRadius: 'md',
+    layoutDensity: 'comfortable',
+  },
+  resumeConfig: {
+    template: 'modern',
+    pageTarget: 1,
+    spacing: 'normal',
+    fontSize: 'standard',
+    accentColor: '#2563eb',
+    showSummary: true,
+    showSkills: true,
+    showProjects: true,
+    showEducation: true,
+  },
+};
+
 export const PRESETS_LIST: PortfolioData[] = [
+  BLANK_PORTFOLIO_TEMPLATE,
   PRESET_PRODUCT_DESIGNER,
   PRESET_FULLSTACK_ENGINEER,
   PRESET_ART_DIRECTOR,

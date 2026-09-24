@@ -30,6 +30,8 @@ import {
   MoveDown,
   Upload,
   FileText,
+  HelpCircle,
+  Sparkles,
 } from 'lucide-react';
 import { ImagePickerModal } from './ImagePickerModal';
 
@@ -37,6 +39,8 @@ interface EditorPanelProps {
   data: PortfolioData;
   onChange: (updated: PortfolioData) => void;
   onOpenResume?: () => void;
+  onStartBlank?: () => void;
+  onLoadDemo?: () => void;
 }
 
 type EditorTab =
@@ -50,7 +54,13 @@ type EditorTab =
   | 'contact'
   | 'sections';
 
-export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange, onOpenResume }) => {
+export const EditorPanel: React.FC<EditorPanelProps> = ({
+  data,
+  onChange,
+  onOpenResume,
+  onStartBlank,
+  onLoadDemo,
+}) => {
   const [activeTab, setActiveTab] = useState<EditorTab>('profile');
   const [pickerTarget, setPickerTarget] = useState<{ type: 'avatar' } | { type: 'project'; id: string } | null>(null);
 
@@ -253,15 +263,15 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange, onOpen
   };
 
   const tabs: { id: EditorTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'profile', label: 'Profile & Bio', icon: <User className="w-3.5 h-3.5" /> },
+    { id: 'profile', label: 'Basic Info & Bio', icon: <User className="w-3.5 h-3.5" /> },
     { id: 'projects', label: `Projects (${data.projects.length})`, icon: <Briefcase className="w-3.5 h-3.5" /> },
-    { id: 'experience', label: `Timeline (${data.experiences.length})`, icon: <Layers className="w-3.5 h-3.5" /> },
+    { id: 'experience', label: `Work Experience (${data.experiences.length})`, icon: <Layers className="w-3.5 h-3.5" /> },
     { id: 'education', label: `Education (${(data.education || []).length})`, icon: <GraduationCap className="w-3.5 h-3.5" /> },
-    { id: 'skills', label: 'Skills & Stack', icon: <Wrench className="w-3.5 h-3.5" /> },
-    { id: 'stats', label: 'Metrics', icon: <BarChart3 className="w-3.5 h-3.5" /> },
-    { id: 'testimonials', label: 'Endorsements', icon: <MessageSquare className="w-3.5 h-3.5" /> },
+    { id: 'skills', label: 'Skills & Tools', icon: <Wrench className="w-3.5 h-3.5" /> },
+    { id: 'stats', label: `Key Numbers (Stats) (${data.stats.length})`, icon: <BarChart3 className="w-3.5 h-3.5 text-amber-400" /> },
+    { id: 'testimonials', label: `Testimonials (${data.testimonials.length})`, icon: <MessageSquare className="w-3.5 h-3.5" /> },
     { id: 'contact', label: 'Contact & Socials', icon: <Mail className="w-3.5 h-3.5" /> },
-    { id: 'sections', label: 'Section Layout', icon: <Layers className="w-3.5 h-3.5" /> },
+    { id: 'sections', label: 'Show / Hide Sections', icon: <Layers className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -293,6 +303,37 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange, onOpen
             <span>{tab.label}</span>
           </button>
         ))}
+      </div>
+
+      {/* Quick Starter Bar: Clean Canvas vs Load Sample */}
+      <div className="px-3 py-2 bg-slate-900/60 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-1.5 text-slate-300">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span className="font-semibold text-slate-200">Portfolio Data:</span>
+          <span className="text-[11px] text-slate-400 hidden sm:inline">Build your own or test with sample</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {onStartBlank && (
+            <button
+              type="button"
+              onClick={onStartBlank}
+              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 hover:border-blue-500/50 transition-colors flex items-center gap-1 text-[11px] font-semibold shadow-xs"
+              title="Reset everything to a clean, blank canvas with your real details"
+            >
+              <span>✨ Start Clean (Blank)</span>
+            </button>
+          )}
+          {onLoadDemo && (
+            <button
+              type="button"
+              onClick={onLoadDemo}
+              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600 transition-colors flex items-center gap-1 text-[11px] font-medium"
+              title="Load example profile for design inspiration"
+            >
+              <span>💡 Load Sample Demo</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Scrollable Form Content */}
@@ -861,52 +902,92 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({ data, onChange, onOpen
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white">Key Quantitative Metrics</h3>
-                <p className="text-xs text-slate-400">Substantiate claims with rigorous quantitative evidence.</p>
+                <h3 className="text-base font-bold text-white">Key Numbers & Stats (Metrics)</h3>
+                <p className="text-xs text-slate-400">Quick numeric highlight badges that showcase your accomplishments at a glance.</p>
               </div>
               <button
                 onClick={addStat}
                 className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Metric</span>
+                <span>Add Number</span>
               </button>
+            </div>
+
+            {/* Beginner-friendly explanation */}
+            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2.5 text-xs">
+              <div className="flex items-center gap-2 text-blue-400 font-bold">
+                <HelpCircle className="w-4 h-4 shrink-0" />
+                <span>What are "Metrics" or Key Numbers?</span>
+              </div>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                In resumes and portfolios, <strong>Metrics</strong> simply mean impressive numbers that prove your real-world experience in 2 seconds to recruiters or clients.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
+                <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                  <div className="text-emerald-400 font-bold font-mono text-sm">3+</div>
+                  <div className="text-white font-semibold mt-0.5">Years Experience</div>
+                  <div className="text-slate-400 text-[10px]">In Web Development</div>
+                </div>
+                <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                  <div className="text-blue-400 font-bold font-mono text-sm">15+</div>
+                  <div className="text-white font-semibold mt-0.5">Projects Delivered</div>
+                  <div className="text-slate-400 text-[10px]">For clients & personal apps</div>
+                </div>
+                <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800">
+                  <div className="text-purple-400 font-bold font-mono text-sm">100%</div>
+                  <div className="text-white font-semibold mt-0.5">On-Time Delivery</div>
+                  <div className="text-slate-400 text-[10px]">Dedicated project workflow</div>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 italic pt-1">
+                💡 Don't want this section on your portfolio or resume? You can delete these cards with the red trash button, or toggle this section off under the <strong>Show / Hide Sections</strong> tab.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {data.stats.map((stat) => (
-                <div key={stat.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                <div key={stat.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-400">Metric Card</span>
-                    <button onClick={() => removeStat(stat.id)} className="p-1 text-red-400 hover:text-red-300">
-                      <Trash2 className="w-3 h-3" />
+                    <span className="text-xs font-semibold text-slate-300">Highlight Number Card</span>
+                    <button
+                      onClick={() => removeStat(stat.id)}
+                      className="p-1 text-red-400 hover:text-red-300 hover:bg-red-950/40 rounded transition-colors"
+                      title="Delete this number"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Value (e.g. 10+, 98%, $180M)</label>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      Big Number or Value (e.g. <span className="text-blue-300 font-mono">3+</span>, <span className="text-blue-300 font-mono">10+</span>, <span className="text-blue-300 font-mono">100%</span>)
+                    </label>
                     <input
                       type="text"
                       value={stat.value}
+                      placeholder="e.g. 3+"
                       onChange={(e) => updateStat(stat.id, 'value', e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-slate-950 border border-slate-700 rounded text-white"
+                      className="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-slate-950 border border-slate-700 rounded text-white focus:border-blue-500 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Label</label>
+                    <label className="block text-[11px] text-slate-400 mb-1">Label (What the number represents)</label>
                     <input
                       type="text"
                       value={stat.label}
+                      placeholder="e.g. Years Experience"
                       onChange={(e) => updateStat(stat.id, 'label', e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white focus:border-blue-500 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Context Note</label>
+                    <label className="block text-[11px] text-slate-400 mb-1">Small Note / Context (Optional)</label>
                     <input
                       type="text"
                       value={stat.context || ''}
+                      placeholder="e.g. Across web apps & client projects"
                       onChange={(e) => updateStat(stat.id, 'context', e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white focus:border-blue-500 outline-none"
                     />
                   </div>
                 </div>

@@ -42,20 +42,30 @@ export const ExportModal: React.FC<ExportModalProps> = ({
     const blob = new Blob([htmlCode], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    a.style.display = 'none';
     a.href = url;
     a.download = `${data.personal.name.toLowerCase().replace(/\s+/g, '-')}-portfolio.html`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 2000);
   };
 
   const handleDownloadJson = () => {
     const blob = new Blob([jsonCode], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    a.style.display = 'none';
     a.href = url;
     a.download = `${data.personal.name.toLowerCase().replace(/\s+/g, '-')}-portfolio-data.json`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 2000);
   };
 
   const handleCopy = () => {
