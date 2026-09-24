@@ -10,6 +10,7 @@ import { ExportModal } from './components/ExportModal';
 import { GitHubModal } from './components/GitHubModal';
 import { ResumeView } from './components/ResumeView';
 import { SocialSharePreview } from './components/SocialSharePreview';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { generateStandaloneHtml } from './utils/exportHtml';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
@@ -110,11 +111,11 @@ export default function App() {
       />
 
       {/* Workspace Body */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden pb-14 lg:pb-0 relative">
         {/* SPLIT VIEW */}
         {viewMode === 'split' && (
           <>
-            <div className="w-[450px] xl:w-[480px] shrink-0 h-full border-r border-slate-800">
+            <div className="w-full lg:w-[450px] xl:w-[480px] shrink-0 h-full border-r border-slate-800 flex flex-col">
               <EditorPanel
                 data={data}
                 onChange={setData}
@@ -123,7 +124,7 @@ export default function App() {
                 onLoadDemo={handleLoadDemo}
               />
             </div>
-            <div className="flex-1 h-full bg-slate-950 overflow-hidden">
+            <div className="hidden lg:block flex-1 h-full bg-slate-950 overflow-hidden">
               <DeviceFrame deviceMode={deviceMode}>
                 <PortfolioRenderer data={data} isInteractive={true} />
               </DeviceFrame>
@@ -146,7 +147,7 @@ export default function App() {
 
         {/* FULL PREVIEW VIEW */}
         {viewMode === 'preview' && (
-          <div className="w-full h-full bg-slate-950">
+          <div className="w-full h-full bg-slate-950 overflow-hidden">
             <DeviceFrame deviceMode={deviceMode}>
               <PortfolioRenderer data={data} isInteractive={true} />
             </DeviceFrame>
@@ -155,7 +156,7 @@ export default function App() {
 
         {/* THEME STUDIO VIEW */}
         {viewMode === 'themes' && (
-          <div className="w-full h-full overflow-y-auto bg-slate-950 p-4">
+          <div className="w-full h-full overflow-y-auto bg-slate-950 p-2 sm:p-4">
             <ThemeStudio
               theme={data.theme}
               onChangeTheme={(updated) => setData({ ...data, theme: updated })}
@@ -172,11 +173,28 @@ export default function App() {
 
         {/* SOCIAL SHARE & OPENGRAPH PREVIEW */}
         {viewMode === 'seo' && (
-          <div className="w-full h-full overflow-y-auto bg-slate-950 p-4">
+          <div className="w-full h-full overflow-y-auto bg-slate-950 p-2 sm:p-4">
             <SocialSharePreview data={data} />
           </div>
         )}
       </div>
+
+      {/* Persistent Mobile Bottom Navigation (Phones & Tablets < 1024px) */}
+      <MobileBottomNav
+        viewMode={viewMode}
+        onSelectViewMode={(mode) => {
+          if (mode === 'export') {
+            setIsExportOpen(true);
+          } else {
+            setViewMode(mode);
+          }
+        }}
+        onExportHtml={handleDownloadHtml}
+        onOpenGithubSync={() => setIsGithubOpen(true)}
+        onPrint={handlePrint}
+        onStartBlank={handleStartBlank}
+        onLoadDemo={handleLoadDemo}
+      />
 
       {/* Export / Download Modal */}
       <ExportModal

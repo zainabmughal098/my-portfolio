@@ -374,31 +374,31 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
   }[spacing];
 
   return (
-    <div className="min-h-full bg-slate-950 text-slate-100 py-6 px-4 flex flex-col items-center">
+    <div className="min-h-full bg-slate-950 text-slate-100 py-4 sm:py-6 px-2 sm:px-4 flex flex-col items-center pb-24 lg:pb-12">
       {/* TOP CONTROL HUB (Hidden on print) */}
-      <div className="no-print w-full max-w-5xl mb-6 bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 shadow-xl space-y-4">
+      <div className="no-print w-full max-w-5xl mb-6 bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-5 shadow-xl space-y-4">
         {/* Navigation & Primary Action Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
             <button
               onClick={onBack}
               className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Portfolio Builder</span>
+              <span>Back to Portfolio</span>
             </button>
             <span className="text-slate-700">|</span>
             <div className="flex items-center gap-1.5 text-xs font-bold text-white">
               <FileDown className="w-4 h-4 text-blue-400" />
-              <span>Resume Studio & PDF Generator</span>
+              <span>Resume Studio</span>
             </div>
           </div>
 
           {/* Action buttons with real PDF download */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
             <button
               onClick={handleCopyPlainText}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors"
               title="Copy clean plain text for ATS resume parsers"
             >
               {copied ? (
@@ -416,18 +416,18 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
 
             <button
               onClick={handlePrint}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors"
+              className="hidden sm:flex px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 items-center gap-1.5 transition-colors"
               title="Open native browser print dialog"
             >
               <Printer className="w-3.5 h-3.5 text-slate-400" />
-              <span className="hidden sm:inline">Print Dialog</span>
+              <span>Print Dialog</span>
             </button>
 
             {/* REAL CLIENT-SIDE PDF DOWNLOAD BUTTON */}
             <button
               onClick={handleDownloadPdf}
               disabled={isGeneratingPdf}
-              className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-wait text-xs font-bold text-white flex items-center gap-2 transition-all shadow-md active:scale-95"
+              className="flex-1 sm:flex-none px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-wait text-xs font-bold text-white flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 cursor-pointer"
               title="Click here to download your resume as a real PDF file (.pdf)"
             >
               {isGeneratingPdf ? (
@@ -865,34 +865,35 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
       </div>
 
       {/* THE PRINTABLE RESUME SHEET (Standard A4 / US Letter with Real-Time Page-Break Indicator) */}
-      <div className="relative w-full max-w-[850px] shadow-2xl rounded-sm">
-        {/* Visual Page Break Marker at exactly PAGE_HEIGHT_PX */}
-        <div
-          style={{ top: `${PAGE_HEIGHT_PX}px` }}
-          className="no-print absolute left-0 right-0 z-30 pointer-events-none flex items-center justify-center"
-        >
-          <div className="w-full border-b-2 border-dashed border-red-500/70" />
-          <span className="absolute bg-red-600 text-white font-mono text-[10px] uppercase font-bold px-3 py-0.5 rounded shadow">
-            --- End of Page 1 (Page Break Boundary) ---
-          </span>
-        </div>
+      <div className="w-full overflow-x-auto flex justify-center px-0 sm:px-4">
+        <div className="relative w-full max-w-[850px] min-w-[320px] shadow-2xl rounded-sm">
+          {/* Visual Page Break Marker at exactly PAGE_HEIGHT_PX */}
+          <div
+            style={{ top: `${PAGE_HEIGHT_PX}px` }}
+            className="no-print absolute left-0 right-0 z-30 pointer-events-none flex items-center justify-center"
+          >
+            <div className="w-full border-b-2 border-dashed border-red-500/70" />
+            <span className="absolute bg-red-600 text-white font-mono text-[10px] uppercase font-bold px-3 py-0.5 rounded shadow">
+              --- End of Page 1 (Page Break Boundary) ---
+            </span>
+          </div>
 
-        {/* 2nd Page Break Marker at PAGE_HEIGHT_PX * 2 */}
-        <div
-          style={{ top: `${PAGE_HEIGHT_PX * 2}px` }}
-          className="no-print absolute left-0 right-0 z-30 pointer-events-none flex items-center justify-center"
-        >
-          <div className="w-full border-b-2 border-dashed border-red-500/70" />
-          <span className="absolute bg-red-600 text-white font-mono text-[10px] uppercase font-bold px-3 py-0.5 rounded shadow">
-            --- End of Page 2 (Page Break Boundary) ---
-          </span>
-        </div>
+          {/* 2nd Page Break Marker at PAGE_HEIGHT_PX * 2 */}
+          <div
+            style={{ top: `${PAGE_HEIGHT_PX * 2}px` }}
+            className="no-print absolute left-0 right-0 z-30 pointer-events-none flex items-center justify-center"
+          >
+            <div className="w-full border-b-2 border-dashed border-red-500/70" />
+            <span className="absolute bg-red-600 text-white font-mono text-[10px] uppercase font-bold px-3 py-0.5 rounded shadow">
+              --- End of Page 2 (Page Break Boundary) ---
+            </span>
+          </div>
 
-        {/* THE RESUME CANVAS */}
-        <div
-          ref={resumeRef}
-          className={`w-full bg-white text-slate-900 border border-slate-300 print:border-none print:shadow-none print:p-0 ${paddingClass}`}
-        >
+          {/* THE RESUME CANVAS */}
+          <div
+            ref={resumeRef}
+            className={`w-full bg-white text-slate-900 border border-slate-300 print:border-none print:shadow-none print:p-0 ${paddingClass}`}
+          >
           {/* TEMPLATE 1: MODERN MINIMALIST */}
           {template === 'modern' && (
             <div className="font-sans">
@@ -1516,6 +1517,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 };

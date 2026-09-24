@@ -54,9 +54,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="no-print h-14 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 flex items-center justify-between text-xs text-slate-300 select-none z-30">
       {/* Zone 1: Brand title & Presets */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2 sm:gap-2.5">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm shadow-sm">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm shadow-sm shrink-0">
             F
           </div>
           <span className="font-bold text-sm text-white tracking-tight">
@@ -64,18 +64,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
 
-        <span className="text-slate-700 hidden sm:inline">|</span>
+        <span className="text-slate-700 hidden md:inline">|</span>
 
         {/* Archetype / Preset switcher */}
-        <div className="relative hidden sm:flex items-center gap-1.5">
-          <LayoutTemplate className="w-3.5 h-3.5 text-slate-400" />
+        <div className="relative flex items-center gap-1">
+          <LayoutTemplate className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
           <select
             value={currentPresetId}
             onChange={(e) => {
               const selected = PRESETS_LIST.find((p) => p.id === e.target.value);
               if (selected) onSelectPreset(selected);
             }}
-            className="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+            className="bg-slate-900 border border-slate-800 rounded px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer max-w-[130px] sm:max-w-[200px] truncate"
             title="Switch between Blank Canvas and Example Profiles"
           >
             {PRESETS_LIST.map((preset) => (
@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {onStartBlank && (
           <button
             onClick={onStartBlank}
-            className="hidden xl:flex items-center gap-1 px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors"
+            className="hidden 2xl:flex items-center gap-1 px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors"
             title="Start fresh with a clean, blank portfolio"
           >
             <span>✨ Clean Canvas</span>
@@ -97,8 +97,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
       </div>
 
-      {/* Zone 2: View modes & Device selectors */}
-      <div className="flex items-center gap-2">
+      {/* Zone 2: View modes & Device selectors (Desktop & Laptop screens >= 1024px) */}
+      <div className="hidden lg:flex items-center gap-2">
         {/* Workspace View Mode Switcher */}
         <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
           <button
@@ -109,7 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title="Split Editor & Live Preview"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Split</span>
+            <span>Split</span>
           </button>
           <button
             onClick={() => onSelectViewMode('editor')}
@@ -165,7 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Device Switcher (active in preview or split) */}
         {(viewMode === 'preview' || viewMode === 'split') && (
-          <div className="hidden lg:flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400">
+          <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400">
             <button
               onClick={() => onSelectDeviceMode('desktop')}
               className={`p-1 rounded transition-colors ${deviceMode === 'desktop' ? 'bg-slate-800 text-white' : 'hover:text-slate-200'}`}
@@ -198,20 +198,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
       </div>
 
-      {/* Zone 3: Actions (Export HTML, GitHub Push, Print) */}
-      <div className="flex items-center gap-2">
+      {/* Zone 3: Actions (Responsive for Phone & Computer) */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={onOpenGithubSync}
-          className="px-2.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 transition-colors flex items-center gap-1.5"
+          className="hidden md:flex px-2.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 transition-colors items-center gap-1.5"
           title="Connect & Push to GitHub"
         >
           <Github className="w-3.5 h-3.5 text-white" />
-          <span className="hidden sm:inline font-medium">Link GitHub</span>
+          <span className="font-medium">Link GitHub</span>
         </button>
 
         <button
           onClick={onPrint}
-          className="p-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+          className="hidden sm:flex p-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
           title="Print / Save as PDF"
         >
           <Printer className="w-3.5 h-3.5" />
@@ -219,7 +219,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={() => onSelectViewMode('export')}
-          className="px-2.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 transition-colors flex items-center gap-1.5"
+          className="hidden sm:flex px-2.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 transition-colors items-center gap-1.5"
           title="Export JSON & Standalone HTML"
         >
           <Share2 className="w-3.5 h-3.5" />
@@ -228,11 +228,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={onExportHtml}
-          className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+          className="px-2.5 sm:px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm text-xs"
           title="Download Standalone Single-File Website"
         >
           <Download className="w-3.5 h-3.5" />
-          <span>Export HTML</span>
+          <span className="hidden xs:inline">Export HTML</span>
+          <span className="xs:hidden">Export</span>
         </button>
       </div>
     </header>
