@@ -45,11 +45,18 @@ interface ResumeViewProps {
   onChangeData?: (updated: PortfolioData) => void;
   onBack: () => void;
   onOpenTemplateGallery?: () => void;
+  onOpenPreview?: () => void;
 }
 
 const PAGE_HEIGHT_PX = 1040; // Printable height threshold at standard 96dpi for A4/Letter
 
-export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBack, onOpenTemplateGallery }) => {
+export const ResumeView: React.FC<ResumeViewProps> = ({
+  data,
+  onChangeData,
+  onBack,
+  onOpenTemplateGallery,
+  onOpenPreview,
+}) => {
   const { personal, socials, experiences, education, skills, projects, contact, customLinks } = data;
 
   const [template, setTemplate] = useState<ResumeTemplateId>(data.resumeConfig?.template || 'modern');
@@ -517,9 +524,23 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
               3
             </span>
             <span>
-              <strong className="text-white">Step 3:</strong> Fit 1-Page / 2-Pages & Spacing, then Export PDF
+              <strong className="text-white">Step 3:</strong> Page, Spacing & PDF Download
             </span>
           </div>
+
+          {onOpenPreview && (
+            <>
+              <div className="hidden md:block text-slate-700">&rarr;</div>
+              <button
+                type="button"
+                onClick={onOpenPreview}
+                className="flex items-center gap-1.5 text-blue-400 hover:text-white font-semibold cursor-pointer text-xs transition-colors"
+                title="View interactive live portfolio"
+              >
+                <span>Step 4: Live Portfolio Preview &rarr;</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* VISUAL TEMPLATE GALLERY CARDS */}

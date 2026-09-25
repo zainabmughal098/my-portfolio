@@ -10,7 +10,6 @@ import { ExportModal } from './components/ExportModal';
 import { TemplateModal } from './components/TemplateModal';
 import { ResumeView } from './components/ResumeView';
 import { SocialSharePreview } from './components/SocialSharePreview';
-import { MobileBottomNav } from './components/MobileBottomNav';
 import { FIELD_TEMPLATES, FieldTemplate } from './data/templates';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
@@ -29,7 +28,7 @@ export default function App() {
     return BLANK_PORTFOLIO_TEMPLATE;
   });
 
-  const [viewMode, setViewMode] = useState<ViewMode>('split');
+  const [viewMode, setViewMode] = useState<ViewMode>('editor');
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('desktop');
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
@@ -121,31 +120,10 @@ export default function App() {
       />
 
       {/* Workspace Body */}
-      <div className="flex-1 flex overflow-hidden pb-14 lg:pb-0 relative">
-        {/* SPLIT VIEW */}
-        {viewMode === 'split' && (
-          <>
-            <div className="w-full lg:w-[450px] xl:w-[480px] shrink-0 h-full border-r border-slate-800 flex flex-col">
-              <EditorPanel
-                data={data}
-                onChange={setData}
-                onOpenResume={() => setViewMode('resume')}
-                onOpenTemplates={() => setViewMode('themes')}
-                onStartBlank={handleStartBlank}
-                onLoadDemo={handleLoadDemo}
-              />
-            </div>
-            <div className="hidden lg:block flex-1 h-full bg-slate-950 overflow-hidden">
-              <DeviceFrame deviceMode={deviceMode}>
-                <PortfolioRenderer data={data} isInteractive={true} />
-              </DeviceFrame>
-            </div>
-          </>
-        )}
-
-        {/* FULL EDITOR VIEW */}
-        {viewMode === 'editor' && (
-          <div className="w-full max-w-5xl mx-auto h-full">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* STEP 1: ENTER DETAILS (CLEAN, FOCUSED FULL EDITOR - NO CRAMPED SPLIT VIEW) */}
+        {(viewMode === 'editor' || viewMode === 'split') && (
+          <div className="w-full max-w-5xl mx-auto h-full flex flex-col">
             <EditorPanel
               data={data}
               onChange={setData}
@@ -157,16 +135,7 @@ export default function App() {
           </div>
         )}
 
-        {/* FULL PREVIEW VIEW */}
-        {viewMode === 'preview' && (
-          <div className="w-full h-full bg-slate-950 overflow-hidden">
-            <DeviceFrame deviceMode={deviceMode}>
-              <PortfolioRenderer data={data} isInteractive={true} />
-            </DeviceFrame>
-          </div>
-        )}
-
-        {/* TEMPLATES & STYLES STUDIO */}
+        {/* STEP 2: TEMPLATES & STYLES STUDIO */}
         {viewMode === 'themes' && (
           <div className="w-full h-full overflow-y-auto bg-slate-950">
             <TemplatesStudio
@@ -175,19 +144,30 @@ export default function App() {
               onApplyTemplate={handleApplyTemplate}
               onUpdateTheme={(updatedTheme) => setData({ ...data, theme: updatedTheme })}
               onOpenResume={() => setViewMode('resume')}
+              onBackToDetails={() => setViewMode('editor')}
             />
           </div>
         )}
 
-        {/* ATS RESUME & PRINTABLE CV VIEW */}
+        {/* STEP 3: ATS RESUME, SPACING & PDF DOWNLOAD */}
         {viewMode === 'resume' && (
           <div className="w-full h-full overflow-y-auto bg-slate-950">
             <ResumeView
               data={data}
               onChangeData={setData}
-              onBack={() => setViewMode('split')}
+              onBack={() => setViewMode('themes')}
               onOpenTemplateGallery={() => setViewMode('themes')}
+              onOpenPreview={() => setViewMode('preview')}
             />
+          </div>
+        )}
+
+        {/* STEP 4: FULL PREVIEW VIEW (LIVE INTERACTIVE PORTFOLIO) */}
+        {viewMode === 'preview' && (
+          <div className="w-full h-full bg-slate-950 overflow-hidden">
+            <DeviceFrame deviceMode={deviceMode}>
+              <PortfolioRenderer data={data} isInteractive={true} />
+            </DeviceFrame>
           </div>
         )}
 
@@ -198,21 +178,6 @@ export default function App() {
           </div>
         )}
       </div>
-
-      {/* Persistent Mobile Bottom Navigation (Phones & Tablets < 1024px) */}
-      <MobileBottomNav
-        viewMode={viewMode}
-        onSelectViewMode={(mode) => {
-          if (mode === 'export') {
-            setIsExportOpen(true);
-          } else {
-            setViewMode(mode);
-          }
-        }}
-        onStartBlank={handleStartBlank}
-        onLoadDemo={handleLoadDemo}
-        onOpenTemplates={() => setViewMode('themes')}
-      />
 
       {/* Unified Export / Download PDF Modal */}
       <ExportModal

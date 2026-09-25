@@ -1,22 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import {
-  Sparkles,
-  Eye,
-  Sliders,
   Download,
   Smartphone,
   Tablet,
   Monitor,
-  Maximize2,
-  LayoutTemplate,
-  FileText,
-  Globe2,
-  MoreHorizontal,
-  Trash2,
-  RotateCcw,
-  Lightbulb,
 } from 'lucide-react';
-import { PRESETS_LIST } from '../data/presets';
 import { PortfolioData } from '../types/portfolio';
 
 export type ViewMode = 'split' | 'editor' | 'preview' | 'themes' | 'resume' | 'seo' | 'export';
@@ -37,55 +25,31 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  onSelectPreset,
   viewMode,
   onSelectViewMode,
   deviceMode,
   onSelectDeviceMode,
-  onReset,
-  onStartBlank,
-  onLoadDemo,
-  onOpenTemplates,
-  activeTemplateName,
 }) => {
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
-
-  // Close more menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setIsMoreOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const isWebPortfolioActive = viewMode === 'split' || viewMode === 'editor' || viewMode === 'preview';
-
   return (
     <header className="no-print h-14 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between text-xs text-slate-300 select-none z-30">
       {/* Zone 1: Logo & Brand */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm shadow-sm shrink-0">
-            F
-          </div>
-          <span className="font-bold text-sm text-white tracking-tight hidden sm:inline">
-            FolioCraft
-          </span>
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm shadow-sm shrink-0">
+          F
         </div>
+        <span className="font-bold text-sm text-white tracking-tight hidden sm:inline">
+          FolioCraft
+        </span>
       </div>
 
-      {/* Zone 2: Sequential 3-Step Workflow (Details -> Template -> Spacing & PDF) */}
-      <div className="hidden md:flex items-center gap-2">
+      {/* Zone 2: Sequential 4-Step Workflow (Details -> Template -> Page & Spacing -> Preview) */}
+      <div className="flex items-center gap-1 sm:gap-2">
         <div className="flex items-center p-0.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
           {/* Step 1: Enter Details */}
           <button
-            onClick={() => onSelectViewMode('split')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              isWebPortfolioActive
+            onClick={() => onSelectViewMode('editor')}
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              viewMode === 'editor'
                 ? 'bg-blue-600 text-white font-semibold shadow-xs'
                 : 'text-slate-400 hover:text-white'
             }`}
@@ -93,20 +57,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <span
               className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                isWebPortfolioActive ? 'bg-white text-blue-600' : 'bg-slate-800 text-slate-300'
+                viewMode === 'editor' ? 'bg-white text-blue-600' : 'bg-slate-800 text-slate-300'
               }`}
             >
               1
             </span>
-            <span>1. Enter Details</span>
+            <span className="hidden sm:inline">1. Enter Details</span>
+            <span className="sm:hidden">Details</span>
           </button>
 
-          <span className="text-slate-700 px-1">&rarr;</span>
+          <span className="text-slate-700 px-0.5 sm:px-1">&rarr;</span>
 
           {/* Step 2: Choose Template & Themes */}
           <button
             onClick={() => onSelectViewMode('themes')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               viewMode === 'themes'
                 ? 'bg-blue-600 text-white font-semibold shadow-xs'
                 : 'text-slate-400 hover:text-white'
@@ -120,20 +85,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               2
             </span>
-            <span>2. Template & Themes</span>
+            <span className="hidden sm:inline">2. Template</span>
+            <span className="sm:hidden">Template</span>
           </button>
 
-          <span className="text-slate-700 px-1">&rarr;</span>
+          <span className="text-slate-700 px-0.5 sm:px-1">&rarr;</span>
 
-          {/* Step 3: Page, Spacing & PDF */}
+          {/* Step 3: Page, Spacing & Download */}
           <button
             onClick={() => onSelectViewMode('resume')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               viewMode === 'resume'
                 ? 'bg-blue-600 text-white font-semibold shadow-xs'
                 : 'text-slate-400 hover:text-white'
             }`}
-            title="Step 3: Choose 1 Page / 2 Pages, adjust compact/normal spacing & export PDF"
+            title="Step 3: Choose 1 Page / 2 Pages, adjust compact/normal spacing & download PDF"
           >
             <span
               className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
@@ -142,13 +108,37 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               3
             </span>
-            <span>3. Page, Spacing & PDF</span>
+            <span className="hidden sm:inline">3. Page, Spacing & Download</span>
+            <span className="sm:hidden">Spacing & PDF</span>
+          </button>
+
+          <span className="text-slate-700 px-0.5 sm:px-1">&rarr;</span>
+
+          {/* Step 4: Preview */}
+          <button
+            onClick={() => onSelectViewMode('preview')}
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              viewMode === 'preview'
+                ? 'bg-blue-600 text-white font-semibold shadow-xs'
+                : 'text-slate-400 hover:text-white'
+            }`}
+            title="Step 4: Interactive Live Portfolio Preview"
+          >
+            <span
+              className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                viewMode === 'preview' ? 'bg-white text-blue-600' : 'bg-slate-800 text-slate-300'
+              }`}
+            >
+              4
+            </span>
+            <span className="hidden sm:inline">4. Preview</span>
+            <span className="sm:hidden">Preview</span>
           </button>
         </div>
 
-        {/* Device Switcher (shown when working on Web Portfolio) */}
-        {isWebPortfolioActive && (
-          <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400">
+        {/* Device Switcher (shown when in Step 4 Preview) */}
+        {viewMode === 'preview' && (
+          <div className="hidden lg:flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400">
             <button
               onClick={() => onSelectDeviceMode('desktop')}
               className={`p-1.5 rounded transition-colors cursor-pointer ${deviceMode === 'desktop' ? 'bg-slate-800 text-white' : 'hover:text-slate-200'}`}
@@ -174,90 +164,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
       </div>
 
-      {/* Zone 3: Download PDF & More Options */}
+      {/* Zone 3: Direct Download PDF Action (only shown if not already in Step 3 where toolbar has it) */}
       <div className="flex items-center gap-2">
-        {/* Primary Download Action: Shown during Step 1 & 2 to jump to PDF export. In Step 3 (Resume Studio), the master download button is already right on the resume toolbar */}
         {viewMode !== 'resume' && (
           <button
             onClick={() => onSelectViewMode('resume')}
-            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all flex items-center gap-1.5 shadow-sm text-xs cursor-pointer active:scale-95"
-            title="Go to Step 3: Page, Spacing & PDF Download"
+            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all flex items-center gap-1.5 shadow-sm text-xs cursor-pointer active:scale-95"
+            title="Jump to Step 3: Page, Spacing & PDF Download"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download PDF</span>
+            <span className="hidden sm:inline">Download PDF</span>
           </button>
         )}
-
-        {/* More Options Dropdown */}
-        <div className="relative" ref={moreRef}>
-          <button
-            onClick={() => setIsMoreOpen(!isMoreOpen)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-            title="More Options"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-
-          {isMoreOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl py-1.5 z-50 text-xs animate-in fade-in duration-100 divide-y divide-slate-800">
-              <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                Tools & Samples
-              </div>
-
-              <div className="py-1">
-                <button
-                  onClick={() => {
-                    setIsMoreOpen(false);
-                    onSelectViewMode('seo');
-                  }}
-                  className="w-full px-3 py-2 text-left hover:bg-slate-800 flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer"
-                >
-                  <Globe2 className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Social Share & SEO Cards</span>
-                </button>
-
-                {onLoadDemo && (
-                  <button
-                    onClick={() => {
-                      setIsMoreOpen(false);
-                      onLoadDemo();
-                    }}
-                    className="w-full px-3 py-2 text-left hover:bg-slate-800 flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer"
-                  >
-                    <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Load Example Profile Data</span>
-                  </button>
-                )}
-
-                {onStartBlank && (
-                  <button
-                    onClick={() => {
-                      setIsMoreOpen(false);
-                      onStartBlank();
-                    }}
-                    className="w-full px-3 py-2 text-left hover:bg-slate-800 flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Start with Blank Canvas</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="py-1">
-                <button
-                  onClick={() => {
-                    setIsMoreOpen(false);
-                    onReset();
-                  }}
-                  className="w-full px-3 py-2 text-left hover:bg-slate-800 flex items-center gap-2 text-rose-400 hover:text-rose-300 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset Everything to Default</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </header>
   );
