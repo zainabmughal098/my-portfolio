@@ -44,11 +44,12 @@ interface ResumeViewProps {
   data: PortfolioData;
   onChangeData?: (updated: PortfolioData) => void;
   onBack: () => void;
+  onOpenTemplateGallery?: () => void;
 }
 
 const PAGE_HEIGHT_PX = 1040; // Printable height threshold at standard 96dpi for A4/Letter
 
-export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBack }) => {
+export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBack, onOpenTemplateGallery }) => {
   const { personal, socials, experiences, education, skills, projects, contact, customLinks } = data;
 
   const [template, setTemplate] = useState<ResumeTemplateId>(data.resumeConfig?.template || 'modern');
@@ -57,6 +58,13 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
   const [fontSize, setFontSize] = useState<'compact' | 'standard' | 'large'>(data.resumeConfig?.fontSize || 'standard');
   const [accentColor, setAccentColor] = useState<string>(data.resumeConfig?.accentColor || '#1d4ed8');
   const [showTemplateGallery, setShowTemplateGallery] = useState(true);
+
+  // Sync when template changes from global template modal
+  useEffect(() => {
+    if (data.resumeConfig?.template && data.resumeConfig.template !== template) {
+      setTemplate(data.resumeConfig.template);
+    }
+  }, [data.resumeConfig?.template]);
 
   // Section visibility toggles
   const [showSummary, setShowSummary] = useState(data.resumeConfig?.showSummary ?? true);
@@ -329,49 +337,77 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Font size classes
+  // Professional spacing system: governs vertical margins, section gap, item spacing, bullet gap, line height, and outer padding
+  // Ensures "compact" mode covers the whole page horizontally and tightens vertical gaps without squeezing the sides!
+  const spacingClasses = {
+    compact: {
+      padding: 'px-6 py-5 sm:px-8 sm:py-6', // edge-to-edge coverage, no giant blank side margins!
+      sectionGap: 'mb-2.5 sm:mb-3',
+      headerGap: 'pb-2.5 mb-2.5',
+      itemGap: 'space-y-1.5',
+      bulletGap: 'space-y-0.5',
+      lineHeight: 'leading-tight sm:leading-snug',
+      skillsGap: 'space-y-0.5',
+    },
+    normal: {
+      padding: 'px-7 py-7 sm:px-10 sm:py-8',
+      sectionGap: 'mb-3.5 sm:mb-4',
+      headerGap: 'pb-3.5 mb-3.5',
+      itemGap: 'space-y-2 sm:space-y-2.5',
+      bulletGap: 'space-y-1',
+      lineHeight: 'leading-normal',
+      skillsGap: 'space-y-1',
+    },
+    spacious: {
+      padding: 'px-8 py-8 sm:px-11 sm:py-10',
+      sectionGap: 'mb-5 sm:mb-6',
+      headerGap: 'pb-4 mb-4.5',
+      itemGap: 'space-y-3 sm:space-y-3.5',
+      bulletGap: 'space-y-1.5',
+      lineHeight: 'leading-relaxed',
+      skillsGap: 'space-y-1.5',
+    },
+  }[spacing];
+
+  // Font size classes with spacing mapped directly to the spacing state
   const fontScaleClasses = {
     compact: {
       name: 'text-2xl',
-      title: 'text-base',
-      heading: 'text-[11px]',
-      subheading: 'text-xs',
-      body: 'text-[11px] leading-[1.35]',
+      title: 'text-sm font-semibold',
+      heading: 'text-[11px] font-bold tracking-wider',
+      subheading: 'text-xs font-bold',
+      body: `text-[11px] ${spacingClasses.lineHeight}`,
       meta: 'text-[10px]',
-      gap: 'space-y-2',
-      sectionGap: 'mb-3',
-      itemGap: 'space-y-1.5',
+      gap: spacingClasses.itemGap,
+      sectionGap: spacingClasses.sectionGap,
+      itemGap: spacingClasses.itemGap,
     },
     standard: {
-      name: 'text-3xl',
-      title: 'text-lg',
-      heading: 'text-xs',
-      subheading: 'text-sm',
-      body: 'text-xs leading-[1.5]',
+      name: 'text-2xl sm:text-3xl font-extrabold',
+      title: 'text-base font-semibold',
+      heading: 'text-xs font-bold tracking-wider',
+      subheading: 'text-xs sm:text-sm font-bold',
+      body: `text-xs ${spacingClasses.lineHeight}`,
       meta: 'text-[11px]',
-      gap: 'space-y-3',
-      sectionGap: 'mb-4',
-      itemGap: 'space-y-2.5',
+      gap: spacingClasses.itemGap,
+      sectionGap: spacingClasses.sectionGap,
+      itemGap: spacingClasses.itemGap,
     },
     large: {
-      name: 'text-4xl',
-      title: 'text-xl',
-      heading: 'text-sm',
-      subheading: 'text-base',
-      body: 'text-sm leading-[1.6]',
+      name: 'text-3xl sm:text-4xl font-extrabold',
+      title: 'text-lg font-semibold',
+      heading: 'text-sm font-bold tracking-wider',
+      subheading: 'text-sm sm:text-base font-bold',
+      body: `text-sm ${spacingClasses.lineHeight}`,
       meta: 'text-xs',
-      gap: 'space-y-4',
-      sectionGap: 'mb-6',
-      itemGap: 'space-y-3.5',
+      gap: spacingClasses.itemGap,
+      sectionGap: spacingClasses.sectionGap,
+      itemGap: spacingClasses.itemGap,
     },
   }[fontSize];
 
   // Spacing padding classes
-  const paddingClass = {
-    compact: 'p-8 sm:p-10',
-    normal: 'p-10 sm:p-12',
-    spacious: 'p-12 sm:p-16',
-  }[spacing];
+  const paddingClass = spacingClasses.padding;
 
   return (
     <div className="min-h-full bg-slate-950 text-slate-100 py-4 sm:py-6 px-2 sm:px-4 flex flex-col items-center pb-24 lg:pb-12">
@@ -489,112 +525,110 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
               <Layout className="w-3.5 h-3.5 text-blue-400" />
               <span>Select Resume Template</span>
             </label>
-            <button
-              onClick={() => setShowTemplateGallery(!showTemplateGallery)}
-              className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold"
-            >
-              <span>{showTemplateGallery ? 'Hide Gallery' : 'Show All Templates'}</span>
-              {showTemplateGallery ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
+            <div className="flex items-center gap-2">
+              {onOpenTemplateGallery && (
+                <button
+                  type="button"
+                  onClick={onOpenTemplateGallery}
+                  className="text-[11px] text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 bg-blue-500/10 border border-blue-500/30 px-2.5 py-1 rounded-md cursor-pointer hover:bg-blue-500/20 transition-colors"
+                  title="Switch to full Templates & Styles Studio"
+                >
+                  <Sparkles className="w-3 h-3 text-blue-400" />
+                  <span>All Templates & Styles &rarr;</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {showTemplateGallery && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {[
-                {
-                  id: 'modern' as ResumeTemplateId,
-                  title: 'Modern Minimalist',
-                  tag: 'Most Popular',
-                  badgeClass: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
-                  icon: <Layout className="w-4 h-4 text-blue-400" />,
-                  desc: 'Clean accent divider line, modern sans-serif typography, and balanced 2-column project grid.',
-                },
-                {
-                  id: 'tech' as ResumeTemplateId,
-                  title: 'Tech & Systems Architect',
-                  tag: 'Engineers & DevOps',
-                  badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
-                  icon: <Terminal className="w-4 h-4 text-emerald-400" />,
-                  desc: 'Core stack & capabilities front-and-center, monospace tags, live GitHub code & demo links.',
-                },
-                {
-                  id: 'editorial' as ResumeTemplateId,
-                  title: 'Editorial Elegance',
-                  tag: 'Designers & Writers',
-                  badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
-                  icon: <BookOpen className="w-4 h-4 text-amber-400" />,
-                  desc: 'Sophisticated serif headlines, centered classic header, and chronological case study narrative.',
-                },
-                {
-                  id: 'classic' as ResumeTemplateId,
-                  title: 'Harvard / Ivy League Standard',
-                  tag: '100% ATS Optimized',
-                  badgeClass: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
-                  icon: <Award className="w-4 h-4 text-purple-400" />,
-                  desc: 'Timeless black & white Ivy League layout, centered contact row, uppercase underlined sections.',
-                },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setTemplate(opt.id)}
-                  className={`relative p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between cursor-pointer ${
-                    template === opt.id
-                      ? 'bg-blue-950/40 border-blue-500 shadow-md ring-1 ring-blue-500'
-                      : 'bg-slate-950 border-slate-800 hover:border-slate-700 hover:bg-slate-900/60'
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="p-1.5 rounded-lg bg-slate-900 border border-slate-800">
-                        {opt.icon}
-                      </div>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${opt.badgeClass}`}>
-                        {opt.tag}
-                      </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              {
+                id: 'modern' as ResumeTemplateId,
+                title: 'Modern Minimalist',
+                tag: 'Universal Clean',
+                badgeClass: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+                icon: <Layout className="w-4 h-4 text-blue-400" />,
+                desc: 'Clean accent divider line, modern sans-serif typography, and balanced 2-column project grid.',
+              },
+              {
+                id: 'tech' as ResumeTemplateId,
+                title: 'Tech & Systems Architect',
+                tag: 'Engineers & DevOps',
+                badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+                icon: <Terminal className="w-4 h-4 text-emerald-400" />,
+                desc: 'Core stack & capabilities front-and-center, monospace tags, live GitHub code & demo links.',
+              },
+              {
+                id: 'editorial' as ResumeTemplateId,
+                title: 'Editorial Elegance',
+                tag: 'Designers & Writers',
+                badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+                icon: <BookOpen className="w-4 h-4 text-amber-400" />,
+                desc: 'Sophisticated serif headlines, centered classic header, and chronological case study narrative.',
+              },
+              {
+                id: 'classic' as ResumeTemplateId,
+                title: 'Harvard / Ivy League Standard',
+                tag: '100% ATS Optimized',
+                badgeClass: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
+                icon: <Award className="w-4 h-4 text-purple-400" />,
+                desc: 'Timeless black & white Ivy League layout, centered contact row, uppercase underlined sections.',
+              },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setTemplate(opt.id)}
+                className={`relative p-3.5 rounded-xl text-left border transition-all flex flex-col justify-between cursor-pointer ${
+                  template === opt.id
+                    ? 'bg-blue-950/40 border-blue-500 shadow-md ring-1 ring-blue-500'
+                    : 'bg-slate-950 border-slate-800 hover:border-slate-700 hover:bg-slate-900/60'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="p-1.5 rounded-lg bg-slate-900 border border-slate-800">
+                      {opt.icon}
                     </div>
-                    <div className="font-bold text-xs text-white">{opt.title}</div>
-                    <p className="text-[11px] text-slate-400 mt-1 leading-snug">{opt.desc}</p>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${opt.badgeClass}`}>
+                      {opt.tag}
+                    </span>
                   </div>
+                  <div className="font-bold text-xs text-white">{opt.title}</div>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-snug">{opt.desc}</p>
+                </div>
 
-                  <div className="pt-3 mt-2 border-t border-slate-800/80 flex items-center justify-between">
-                    {template === opt.id ? (
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-blue-400">
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Active Template</span>
-                      </span>
-                    ) : (
-                      <span className="text-[11px] text-slate-500 font-medium group-hover:text-slate-300">
-                        Select Template &rarr;
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+                <div className="pt-3 mt-2 border-t border-slate-800/80 flex items-center justify-between">
+                  {template === opt.id ? (
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-blue-400">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Active Style</span>
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-slate-500 font-medium group-hover:text-slate-300">
+                      Apply Style &rarr;
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Dynamic Controls Grid: Template Dropdown, Page Target, Spacing, Density */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-1 border-t border-slate-800/80">
-          {/* 1. Template Choice */}
-          <div className="space-y-1.5">
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Resume Template
-            </label>
-            <select
-              value={template}
-              onChange={(e) => setTemplate(e.target.value as ResumeTemplateId)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
-            >
-              <option value="modern">Modern Minimalist (Clean 2-Column)</option>
-              <option value="tech">Tech & Software Architect (Skills First)</option>
-              <option value="editorial">Editorial Elegance (Serif Titles)</option>
-              <option value="classic">Classic Harvard (Ivy League Standard)</option>
-            </select>
+        {/* Dynamic Fit Controls Grid: Target Page, Spacing, Typography Size */}
+        <div className="pt-2 border-t border-slate-800/80">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5 text-blue-400" />
+              <span>Page Length, Spacing & Typography Size</span>
+            </span>
+            <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 rounded-full hidden sm:inline">
+              Adjusts in Real-Time
+            </span>
           </div>
 
-          {/* 2. Target Page Constraint */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          {/* 1. Target Page Constraint */}
           <div className="space-y-1.5">
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
               Target Length
@@ -659,6 +693,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
             </div>
           </div>
         </div>
+      </div>
 
         {/* Section Toggles & Custom Links row */}
         <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 text-xs">

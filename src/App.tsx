@@ -3,13 +3,15 @@ import { PortfolioData } from './types/portfolio';
 import { BLANK_PORTFOLIO_TEMPLATE, PRESET_PRODUCT_DESIGNER, PRESETS_LIST } from './data/presets';
 import { Navbar, ViewMode, DeviceMode } from './components/Navbar';
 import { EditorPanel } from './components/EditorPanel';
-import { ThemeStudio } from './components/ThemeStudio';
+import { TemplatesStudio } from './components/TemplatesStudio';
 import { PortfolioRenderer } from './components/PortfolioRenderer';
 import { DeviceFrame } from './components/DeviceFrame';
 import { ExportModal } from './components/ExportModal';
+import { TemplateModal } from './components/TemplateModal';
 import { ResumeView } from './components/ResumeView';
 import { SocialSharePreview } from './components/SocialSharePreview';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { FIELD_TEMPLATES, FieldTemplate } from './data/templates';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
 
@@ -30,6 +32,8 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('desktop');
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [currentTemplateId, setCurrentTemplateId] = useState<string>('tech-architect');
 
   // Sync to local storage
   useEffect(() => {
@@ -39,6 +43,37 @@ export default function App() {
       console.warn('Failed to save to local storage', e);
     }
   }, [data]);
+
+  const activeTemplate = FIELD_TEMPLATES.find((t) => t.id === currentTemplateId) || FIELD_TEMPLATES[0];
+
+  const handleApplyTemplate = (template: FieldTemplate) => {
+    setCurrentTemplateId(template.id);
+    setData((prev) => ({
+      ...prev,
+      theme: {
+        ...prev.theme,
+        id: template.themePreset,
+        accent: template.accent,
+        fontHeading: template.fontHeading,
+        borderRadius: template.borderRadius,
+        layoutDensity: template.layoutDensity,
+      },
+      resumeConfig: {
+        ...(prev.resumeConfig || {
+          template: 'modern',
+          pageTarget: 1,
+          spacing: 'normal',
+          fontSize: 'standard',
+          showProjects: true,
+          showEducation: true,
+          showSkills: true,
+          showSummary: true,
+          accentColor: '#2563eb',
+        }),
+        template: template.resumeTemplate,
+      },
+    }));
+  };
 
   const handleSelectPreset = (preset: PortfolioData) => {
     if (window.confirm(`Switch to the "${preset.name}" preset? Any unsaved edits will be replaced.`)) {
@@ -81,6 +116,8 @@ export default function App() {
         onReset={handleReset}
         onStartBlank={handleStartBlank}
         onLoadDemo={handleLoadDemo}
+        onOpenTemplates={() => setViewMode('themes')}
+        activeTemplateName={activeTemplate.name}
       />
 
       {/* Workspace Body */}
@@ -127,12 +164,15 @@ export default function App() {
           </div>
         )}
 
-        {/* THEME STUDIO VIEW */}
+        {/* TEMPLATES & STYLES STUDIO */}
         {viewMode === 'themes' && (
-          <div className="w-full h-full overflow-y-auto bg-slate-950 p-2 sm:p-4">
-            <ThemeStudio
-              theme={data.theme}
-              onChangeTheme={(updated) => setData({ ...data, theme: updated })}
+          <div className="w-full h-full overflow-y-auto bg-slate-950">
+            <TemplatesStudio
+              data={data}
+              currentTemplateId={currentTemplateId}
+              onApplyTemplate={handleApplyTemplate}
+              onUpdateTheme={(updatedTheme) => setData({ ...data, theme: updatedTheme })}
+              onOpenResume={() => setViewMode('resume')}
             />
           </div>
         )}
@@ -140,7 +180,12 @@ export default function App() {
         {/* ATS RESUME & PRINTABLE CV VIEW */}
         {viewMode === 'resume' && (
           <div className="w-full h-full overflow-y-auto bg-slate-950">
-            <ResumeView data={data} onChangeData={setData} onBack={() => setViewMode('split')} />
+            <ResumeView
+              data={data}
+              onChangeData={setData}
+              onBack={() => setViewMode('split')}
+              onOpenTemplateGallery={() => setViewMode('themes')}
+            />
           </div>
         )}
 
@@ -164,6 +209,7 @@ export default function App() {
         }}
         onStartBlank={handleStartBlank}
         onLoadDemo={handleLoadDemo}
+        onOpenTemplates={() => setViewMode('themes')}
       />
 
       {/* Unified Export / Download PDF Modal */}
@@ -173,6 +219,19 @@ export default function App() {
         data={data}
         onOpenResume={() => {
           setIsExportOpen(false);
+          setViewMode('resume');
+        }}
+      />
+
+      {/* Interactive Template Gallery & Visual Preview Modal */}
+      <TemplateModal
+        isOpen={isTemplatesOpen}
+        onClose={() => setIsTemplatesOpen(false)}
+        currentTemplateId={currentTemplateId}
+        onApplyTemplate={handleApplyTemplate}
+        userData={data}
+        onOpenResume={() => {
+          setIsTemplatesOpen(false);
           setViewMode('resume');
         }}
       />

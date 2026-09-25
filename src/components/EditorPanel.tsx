@@ -32,6 +32,7 @@ import {
   FileText,
   HelpCircle,
   Sparkles,
+  Sliders,
 } from 'lucide-react';
 import { ImagePickerModal } from './ImagePickerModal';
 
@@ -282,11 +283,11 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
           <button
             type="button"
             onClick={onOpenResume}
-            className="px-2.5 py-1.5 rounded-md flex items-center gap-1.5 bg-blue-950/80 hover:bg-blue-900/90 border border-blue-600/60 text-blue-200 font-semibold text-xs transition-colors whitespace-nowrap mr-1 shadow-sm"
-            title="Open Resume Studio with 4 Templates, 1-Page/2-Page Options & PDF Download"
+            className="px-2.5 py-1.5 rounded-md flex items-center gap-1.5 bg-blue-950/80 hover:bg-blue-900/90 border border-blue-600/60 text-blue-200 font-semibold text-xs transition-colors whitespace-nowrap mr-1 shadow-sm cursor-pointer"
+            title="Open Resume Studio: 1-Page/2-Page Options, Font Size, Spacing & PDF Download"
           >
-            <FileText className="w-3.5 h-3.5 text-blue-400" />
-            <span>Resume Templates &rarr;</span>
+            <Sliders className="w-3.5 h-3.5 text-blue-400" />
+            <span>1-Page/2-Page & Spacing &rarr;</span>
           </button>
         )}
         {tabs.map((tab) => (
