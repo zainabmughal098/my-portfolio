@@ -7,11 +7,9 @@ import { ThemeStudio } from './components/ThemeStudio';
 import { PortfolioRenderer } from './components/PortfolioRenderer';
 import { DeviceFrame } from './components/DeviceFrame';
 import { ExportModal } from './components/ExportModal';
-import { GitHubModal } from './components/GitHubModal';
 import { ResumeView } from './components/ResumeView';
 import { SocialSharePreview } from './components/SocialSharePreview';
 import { MobileBottomNav } from './components/MobileBottomNav';
-import { generateStandaloneHtml } from './utils/exportHtml';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
 
@@ -32,7 +30,6 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('desktop');
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [isGithubOpen, setIsGithubOpen] = useState(false);
 
   // Sync to local storage
   useEffect(() => {
@@ -65,27 +62,6 @@ export default function App() {
     handleStartBlank();
   };
 
-  const handleDownloadHtml = () => {
-    const html = generateStandaloneHtml(data);
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = `${data.personal.name.toLowerCase().replace(/\s+/g, '-')}-portfolio.html`;
-    document.body.appendChild(a);
-    a.click();
-    // Delay revoking URL so browser has time to trigger the download stream
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 2000);
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
       {/* Top Bar Navigation */}
@@ -102,9 +78,6 @@ export default function App() {
         }}
         deviceMode={deviceMode}
         onSelectDeviceMode={setDeviceMode}
-        onExportHtml={handleDownloadHtml}
-        onOpenGithubSync={() => setIsGithubOpen(true)}
-        onPrint={handlePrint}
         onReset={handleReset}
         onStartBlank={handleStartBlank}
         onLoadDemo={handleLoadDemo}
@@ -189,25 +162,19 @@ export default function App() {
             setViewMode(mode);
           }
         }}
-        onExportHtml={handleDownloadHtml}
-        onOpenGithubSync={() => setIsGithubOpen(true)}
-        onPrint={handlePrint}
         onStartBlank={handleStartBlank}
         onLoadDemo={handleLoadDemo}
       />
 
-      {/* Export / Download Modal */}
+      {/* Unified Export / Download PDF Modal */}
       <ExportModal
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
         data={data}
-        onImportData={(imported) => setData(imported)}
-      />
-
-      {/* GitHub Link & Push Modal */}
-      <GitHubModal
-        isOpen={isGithubOpen}
-        onClose={() => setIsGithubOpen(false)}
+        onOpenResume={() => {
+          setIsExportOpen(false);
+          setViewMode('resume');
+        }}
       />
     </div>
   );

@@ -398,7 +398,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
           <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
             <button
               onClick={handleCopyPlainText}
-              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Copy clean plain text for ATS resume parsers"
             >
               {copied ? (
@@ -412,15 +412,6 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
                   <span className="hidden sm:inline">Copy ATS Text</span>
                 </>
               )}
-            </button>
-
-            <button
-              onClick={handlePrint}
-              className="hidden sm:flex px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 items-center gap-1.5 transition-colors"
-              title="Open native browser print dialog"
-            >
-              <Printer className="w-3.5 h-3.5 text-slate-400" />
-              <span>Print Dialog</span>
             </button>
 
             {/* REAL CLIENT-SIDE PDF DOWNLOAD BUTTON */}

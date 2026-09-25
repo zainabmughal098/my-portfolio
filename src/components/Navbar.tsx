@@ -4,9 +4,6 @@ import {
   Eye,
   Sliders,
   Download,
-  Share2,
-  Printer,
-  Github,
   RotateCcw,
   Smartphone,
   Tablet,
@@ -29,9 +26,6 @@ interface NavbarProps {
   onSelectViewMode: (mode: ViewMode) => void;
   deviceMode: DeviceMode;
   onSelectDeviceMode: (mode: DeviceMode) => void;
-  onExportHtml: () => void;
-  onOpenGithubSync: () => void;
-  onPrint: () => void;
   onReset: () => void;
   onStartBlank?: () => void;
   onLoadDemo?: () => void;
@@ -44,9 +38,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectViewMode,
   deviceMode,
   onSelectDeviceMode,
-  onExportHtml,
-  onOpenGithubSync,
-  onPrint,
   onReset,
   onStartBlank,
   onLoadDemo,
@@ -198,42 +189,15 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
       </div>
 
-      {/* Zone 3: Actions (Responsive for Phone & Computer) */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <button
-          onClick={onOpenGithubSync}
-          className="hidden md:flex px-2.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 transition-colors items-center gap-1.5"
-          title="Connect & Push to GitHub"
-        >
-          <Github className="w-3.5 h-3.5 text-white" />
-          <span className="font-medium">Link GitHub</span>
-        </button>
-
-        <button
-          onClick={onPrint}
-          className="hidden sm:flex p-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
-          title="Print / Save as PDF"
-        >
-          <Printer className="w-3.5 h-3.5" />
-        </button>
-
+      {/* Zone 3: Direct Download PDF Action */}
+      <div className="flex items-center gap-2">
         <button
           onClick={() => onSelectViewMode('export')}
-          className="hidden sm:flex px-2.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 transition-colors items-center gap-1.5"
-          title="Export JSON & Standalone HTML"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Export</span>
-        </button>
-
-        <button
-          onClick={onExportHtml}
-          className="px-2.5 sm:px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm text-xs"
-          title="Download Standalone Single-File Website"
+          className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all flex items-center gap-1.5 shadow-sm text-xs cursor-pointer active:scale-95"
+          title="Download as PDF"
         >
           <Download className="w-3.5 h-3.5" />
-          <span className="hidden xs:inline">Export HTML</span>
-          <span className="xs:hidden">Export</span>
+          <span>Download PDF</span>
         </button>
       </div>
     </header>

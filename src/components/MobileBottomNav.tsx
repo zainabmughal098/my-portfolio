@@ -7,10 +7,7 @@ import {
   Menu,
   X,
   Download,
-  Github,
-  Printer,
   Globe2,
-  Share2,
   Trash2,
   Lightbulb,
 } from 'lucide-react';
@@ -19,9 +16,6 @@ import { ViewMode } from './Navbar';
 interface MobileBottomNavProps {
   viewMode: ViewMode;
   onSelectViewMode: (mode: ViewMode) => void;
-  onExportHtml: () => void;
-  onOpenGithubSync: () => void;
-  onPrint: () => void;
   onStartBlank?: () => void;
   onLoadDemo?: () => void;
 }
@@ -29,9 +23,6 @@ interface MobileBottomNavProps {
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   viewMode,
   onSelectViewMode,
-  onExportHtml,
-  onOpenGithubSync,
-  onPrint,
   onStartBlank,
   onLoadDemo,
 }) => {
@@ -60,7 +51,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
                   F
                 </div>
-                <h3 className="text-sm font-bold text-white">More Actions & Tools</h3>
+                <h3 className="text-sm font-bold text-white">More Tools & Options</h3>
               </div>
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -70,38 +61,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               </button>
             </div>
 
+            {/* Clean, Non-Redundant Action Cards */}
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 onClick={() => {
                   setIsMenuOpen(false);
-                  onExportHtml();
+                  onSelectViewMode('export');
                 }}
-                className="p-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex flex-col items-center justify-center gap-1.5 shadow-md"
+                className="p-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex flex-col items-center justify-center gap-1.5 shadow-md cursor-pointer active:scale-95"
               >
                 <Download className="w-4 h-4" />
-                <span>Export HTML</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onSelectViewMode('resume');
-                }}
-                className="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 font-semibold text-xs flex flex-col items-center justify-center gap-1.5 shadow-sm"
-              >
-                <FileText className="w-4 h-4 text-blue-400" />
-                <span>Resume & PDF</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onOpenGithubSync();
-                }}
-                className="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs flex flex-col items-center justify-center gap-1.5"
-              >
-                <Github className="w-4 h-4 text-white" />
-                <span>Link GitHub</span>
+                <span>Download as PDF</span>
               </button>
 
               <button
@@ -109,32 +79,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   setIsMenuOpen(false);
                   onSelectViewMode('seo');
                 }}
-                className="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs flex flex-col items-center justify-center gap-1.5"
+                className="p-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <Globe2 className="w-4 h-4 text-emerald-400" />
-                <span>Social SEO</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onSelectViewMode('export');
-                }}
-                className="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs flex flex-col items-center justify-center gap-1.5"
-              >
-                <Share2 className="w-4 h-4 text-slate-300" />
-                <span>Export Modal</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onPrint();
-                }}
-                className="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs flex flex-col items-center justify-center gap-1.5"
-              >
-                <Printer className="w-4 h-4 text-slate-300" />
-                <span>Print Dialog</span>
+                <span>Social SEO Card</span>
               </button>
             </div>
 
