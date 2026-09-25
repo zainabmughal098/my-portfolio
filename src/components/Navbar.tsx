@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="no-print h-14 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between text-xs text-slate-300 select-none z-30">
-      {/* Zone 1: Logo & Active Template Indicator */}
+      {/* Zone 1: Logo & Brand */}
       <div className="flex items-center gap-2 sm:gap-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-black text-sm shadow-sm shrink-0">
@@ -76,47 +76,34 @@ export const Navbar: React.FC<NavbarProps> = ({
             FolioCraft
           </span>
         </div>
-
-        <span className="text-slate-700 hidden sm:inline">|</span>
-
-        {/* Current Template Pill - 1-Click to Template Studio */}
-        <button
-          onClick={() => {
-            if (onOpenTemplates) onOpenTemplates();
-            else onSelectViewMode('themes');
-          }}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white transition-all cursor-pointer shadow-xs"
-          title="Click to view and switch templates"
-        >
-          <LayoutTemplate className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-          <span className="text-slate-400 hidden md:inline">Template:</span>
-          <span className="font-semibold text-white truncate max-w-[130px] sm:max-w-[160px]">
-            {activeTemplateName || 'Tech & Architect'}
-          </span>
-          <span className="text-[10px] text-blue-400 bg-blue-500/10 px-1.5 py-0.2 rounded border border-blue-500/20 hidden lg:inline">
-            Change
-          </span>
-        </button>
       </div>
 
-      {/* Zone 2: 3 Primary Studios (Desktop & Tablet) */}
+      {/* Zone 2: Sequential 3-Step Workflow (Details -> Template -> Spacing & PDF) */}
       <div className="hidden md:flex items-center gap-2">
         <div className="flex items-center p-0.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-          {/* 1. Web Portfolio Studio */}
+          {/* Step 1: Enter Details */}
           <button
             onClick={() => onSelectViewMode('split')}
             className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               isWebPortfolioActive
-                ? 'bg-slate-800 text-white font-semibold shadow-xs'
+                ? 'bg-blue-600 text-white font-semibold shadow-xs'
                 : 'text-slate-400 hover:text-white'
             }`}
-            title="Edit Portfolio & View Live Web Page"
+            title="Step 1: Enter your personal bio, experience, education, skills & projects"
           >
-            <Sliders className="w-3.5 h-3.5 text-blue-400" />
-            <span>Web Portfolio</span>
+            <span
+              className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                isWebPortfolioActive ? 'bg-white text-blue-600' : 'bg-slate-800 text-slate-300'
+              }`}
+            >
+              1
+            </span>
+            <span>1. Enter Details</span>
           </button>
 
-          {/* 2. Templates & Styles Studio */}
+          <span className="text-slate-700 px-1">&rarr;</span>
+
+          {/* Step 2: Choose Template & Themes */}
           <button
             onClick={() => onSelectViewMode('themes')}
             className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -124,13 +111,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'bg-blue-600 text-white font-semibold shadow-xs'
                 : 'text-slate-400 hover:text-white'
             }`}
-            title="Choose from 6 Field Templates, Colors & Fonts"
+            title="Step 2: Choose your industry template, accent colors, and typography"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Templates & Styles</span>
+            <span
+              className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                viewMode === 'themes' ? 'bg-white text-blue-600' : 'bg-slate-800 text-slate-300'
+              }`}
+            >
+              2
+            </span>
+            <span>2. Template & Themes</span>
           </button>
 
-          {/* 3. Resume Studio */}
+          <span className="text-slate-700 px-1">&rarr;</span>
+
+          {/* Step 3: Page, Spacing & PDF */}
           <button
             onClick={() => onSelectViewMode('resume')}
             className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -138,10 +133,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ? 'bg-blue-600 text-white font-semibold shadow-xs'
                 : 'text-slate-400 hover:text-white'
             }`}
-            title="1-Page / 2-Page Printable Resume with Spacing & PDF"
+            title="Step 3: Choose 1 Page / 2 Pages, adjust compact/normal spacing & export PDF"
           >
-            <FileText className="w-3.5 h-3.5 text-blue-400" />
-            <span>Resume Studio</span>
+            <span
+              className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                viewMode === 'resume' ? 'bg-white text-blue-600' : 'bg-slate-800 text-slate-300'
+              }`}
+            >
+              3
+            </span>
+            <span>3. Page, Spacing & PDF</span>
           </button>
         </div>
 
@@ -175,15 +176,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Zone 3: Download PDF & More Options */}
       <div className="flex items-center gap-2">
-        {/* Primary Download Action */}
-        <button
-          onClick={() => onSelectViewMode('export')}
-          className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all flex items-center gap-1.5 shadow-sm text-xs cursor-pointer active:scale-95"
-          title="Export as Printable PDF"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span>Download PDF</span>
-        </button>
+        {/* Primary Download Action: Shown during Step 1 & 2 to jump to PDF export. In Step 3 (Resume Studio), the master download button is already right on the resume toolbar */}
+        {viewMode !== 'resume' && (
+          <button
+            onClick={() => onSelectViewMode('resume')}
+            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-all flex items-center gap-1.5 shadow-sm text-xs cursor-pointer active:scale-95"
+            title="Go to Step 3: Page, Spacing & PDF Download"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download PDF</span>
+          </button>
+        )}
 
         {/* More Options Dropdown */}
         <div className="relative" ref={moreRef}>

@@ -465,7 +465,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download PDF File</span>
+                  <span>Download PDF</span>
                 </>
               )}
             </button>
@@ -488,32 +488,36 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
           </div>
         )}
 
-        {/* 3-STEP USER GUIDANCE (Ensures zero confusion for any user) */}
-        <div className="bg-slate-950/70 border border-slate-800 rounded-lg p-3 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2 text-slate-300">
-            <span className="w-5 h-5 rounded-full bg-blue-600/30 border border-blue-500/50 text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0">
-              1
+        {/* PROGRESSION STEP TRACKER */}
+        <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 text-slate-400">
+            <span className="w-5 h-5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center shrink-0">
+              ✓
             </span>
             <span>
-              <strong>Pick a Template:</strong> Modern, Tech, Editorial, or Harvard
+              <strong>Step 1:</strong> Details Entered
             </span>
           </div>
+
           <div className="hidden md:block text-slate-700">&rarr;</div>
-          <div className="flex items-center gap-2 text-slate-300">
-            <span className="w-5 h-5 rounded-full bg-blue-600/30 border border-blue-500/50 text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0">
-              2
+
+          <div className="flex items-center gap-2 text-slate-400">
+            <span className="w-5 h-5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center shrink-0">
+              ✓
             </span>
             <span>
-              <strong>Set Target:</strong> Choose 1 Page or 2 Pages (check green status)
+              <strong>Step 2:</strong> Template & Styling
             </span>
           </div>
+
           <div className="hidden md:block text-slate-700">&rarr;</div>
-          <div className="flex items-center gap-2 text-slate-300">
-            <span className="w-5 h-5 rounded-full bg-blue-600/30 border border-blue-500/50 text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+
+          <div className="flex items-center gap-2 text-emerald-300 font-medium">
+            <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center justify-center shrink-0">
               3
             </span>
             <span>
-              Click <strong className="text-blue-400 font-bold">Download PDF File</strong> to save to your computer
+              <strong className="text-white">Step 3:</strong> Fit 1-Page / 2-Pages & Spacing, then Export PDF
             </span>
           </div>
         </div>
@@ -844,28 +848,6 @@ export const ResumeView: React.FC<ResumeViewProps> = ({ data, onChangeData, onBa
                 </p>
               </div>
             </div>
-
-            {!isOverflowing && (
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={handleDownloadPdf}
-                  disabled={isGeneratingPdf}
-                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-                >
-                  {isGeneratingPdf ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Generating PDF...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Download {pageTarget}-Page PDF</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
 
             {isOverflowing && (
               <div className="flex items-center gap-2 shrink-0">

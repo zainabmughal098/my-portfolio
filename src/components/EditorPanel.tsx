@@ -33,6 +33,7 @@ import {
   HelpCircle,
   Sparkles,
   Sliders,
+  ArrowRight,
 } from 'lucide-react';
 import { ImagePickerModal } from './ImagePickerModal';
 
@@ -40,25 +41,27 @@ interface EditorPanelProps {
   data: PortfolioData;
   onChange: (updated: PortfolioData) => void;
   onOpenResume?: () => void;
+  onOpenTemplates?: () => void;
   onStartBlank?: () => void;
   onLoadDemo?: () => void;
 }
 
 type EditorTab =
   | 'profile'
-  | 'projects'
   | 'experience'
   | 'education'
   | 'skills'
+  | 'projects'
+  | 'contact'
   | 'stats'
   | 'testimonials'
-  | 'contact'
   | 'sections';
 
 export const EditorPanel: React.FC<EditorPanelProps> = ({
   data,
   onChange,
   onOpenResume,
+  onOpenTemplates,
   onStartBlank,
   onLoadDemo,
 }) => {
@@ -264,32 +267,21 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   };
 
   const tabs: { id: EditorTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'profile', label: 'Basic Info & Bio', icon: <User className="w-3.5 h-3.5" /> },
-    { id: 'projects', label: `Projects (${data.projects.length})`, icon: <Briefcase className="w-3.5 h-3.5" /> },
-    { id: 'experience', label: `Work Experience (${data.experiences.length})`, icon: <Layers className="w-3.5 h-3.5" /> },
-    { id: 'education', label: `Education (${(data.education || []).length})`, icon: <GraduationCap className="w-3.5 h-3.5" /> },
-    { id: 'skills', label: 'Skills & Tools', icon: <Wrench className="w-3.5 h-3.5" /> },
-    { id: 'stats', label: `Key Numbers (Stats) (${data.stats.length})`, icon: <BarChart3 className="w-3.5 h-3.5 text-amber-400" /> },
+    { id: 'profile', label: '1. Basic Info & Bio', icon: <User className="w-3.5 h-3.5" /> },
+    { id: 'experience', label: `2. Work Experience (${data.experiences.length})`, icon: <Layers className="w-3.5 h-3.5" /> },
+    { id: 'education', label: `3. Education (${(data.education || []).length})`, icon: <GraduationCap className="w-3.5 h-3.5" /> },
+    { id: 'skills', label: '4. Skills & Tools', icon: <Wrench className="w-3.5 h-3.5" /> },
+    { id: 'projects', label: `5. Projects (${data.projects.length})`, icon: <Briefcase className="w-3.5 h-3.5" /> },
+    { id: 'contact', label: '6. Contact & Socials', icon: <Mail className="w-3.5 h-3.5" /> },
+    { id: 'stats', label: `Stats (${data.stats.length})`, icon: <BarChart3 className="w-3.5 h-3.5 text-amber-400" /> },
     { id: 'testimonials', label: `Testimonials (${data.testimonials.length})`, icon: <MessageSquare className="w-3.5 h-3.5" /> },
-    { id: 'contact', label: 'Contact & Socials', icon: <Mail className="w-3.5 h-3.5" /> },
-    { id: 'sections', label: 'Show / Hide Sections', icon: <Layers className="w-3.5 h-3.5" /> },
+    { id: 'sections', label: 'Sections', icon: <Layers className="w-3.5 h-3.5" /> },
   ];
 
   return (
     <div className="h-full flex flex-col bg-slate-950 text-slate-200 border-r border-slate-800 select-none overflow-hidden">
       {/* Sub-navigation bar inside editor */}
       <div className="flex items-center gap-1 p-2 bg-slate-900 border-b border-slate-800 overflow-x-auto scrollbar-none text-xs shrink-0">
-        {onOpenResume && (
-          <button
-            type="button"
-            onClick={onOpenResume}
-            className="px-2.5 py-1.5 rounded-md flex items-center gap-1.5 bg-blue-950/80 hover:bg-blue-900/90 border border-blue-600/60 text-blue-200 font-semibold text-xs transition-colors whitespace-nowrap mr-1 shadow-sm cursor-pointer"
-            title="Open Resume Studio: 1-Page/2-Page Options, Font Size, Spacing & PDF Download"
-          >
-            <Sliders className="w-3.5 h-3.5 text-blue-400" />
-            <span>1-Page/2-Page & Spacing &rarr;</span>
-          </button>
-        )}
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -1298,6 +1290,30 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
               ))}
             </div>
           </div>
+        )}
+      </div>
+
+      {/* STEP PROGRESSION FOOTER BAR (Ensures smooth flow: Details -> Templates -> Page & Spacing) */}
+      <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs shrink-0 z-10 shadow-lg">
+        <div className="flex items-center gap-2">
+          <span className="w-5 h-5 rounded-full bg-blue-600/30 text-blue-300 font-bold flex items-center justify-center text-[10px]">
+            1
+          </span>
+          <div className="leading-tight">
+            <span className="font-bold text-white block text-[11px]">Step 1: Resume Info</span>
+            <span className="text-[10px] text-slate-400">Details entered & saved</span>
+          </div>
+        </div>
+
+        {onOpenTemplates && (
+          <button
+            type="button"
+            onClick={onOpenTemplates}
+            className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer text-xs"
+          >
+            <span>Next: Choose Template (Step 2)</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         )}
       </div>
 

@@ -18,6 +18,7 @@ import {
   Feather,
   Layers,
   ArrowRight,
+  ArrowLeft,
   Type,
   Sliders,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ interface TemplatesStudioProps {
   onApplyTemplate: (template: FieldTemplate) => void;
   onUpdateTheme: (updatedTheme: PortfolioData['theme']) => void;
   onOpenResume: () => void;
+  onBackToDetails?: () => void;
 }
 
 export const TemplatesStudio: React.FC<TemplatesStudioProps> = ({
@@ -36,6 +38,7 @@ export const TemplatesStudio: React.FC<TemplatesStudioProps> = ({
   onApplyTemplate,
   onUpdateTheme,
   onOpenResume,
+  onBackToDetails,
 }) => {
   const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
 
@@ -97,13 +100,45 @@ export const TemplatesStudio: React.FC<TemplatesStudioProps> = ({
 
   return (
     <div className="min-h-full bg-slate-950 text-slate-100 py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8 pb-24">
+      {/* Step Tracker Header */}
+      <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+        <div className="flex items-center gap-2">
+          {onBackToDetails ? (
+            <button
+              onClick={onBackToDetails}
+              className="text-slate-400 hover:text-white flex items-center gap-1 font-medium transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Step 1: Enter Details</span>
+            </button>
+          ) : (
+            <span className="text-slate-400 font-medium">Step 1: Details</span>
+          )}
+          <span className="text-slate-700">&rarr;</span>
+          <span className="font-bold text-amber-400 flex items-center gap-1">
+            <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold flex items-center justify-center border border-amber-500/40">2</span>
+            <span>Step 2: Template & Theme (Current)</span>
+          </span>
+          <span className="text-slate-700 hidden sm:inline">&rarr;</span>
+          <span className="text-slate-500 hidden sm:inline font-medium">Step 3: Page & Spacing</span>
+        </div>
+
+        <button
+          onClick={onOpenResume}
+          className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer text-xs"
+        >
+          <span>Next: Step 3 (Page & Spacing)</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
       {/* Title & Safety Notice */}
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-400 mb-1">
               <LayoutTemplate className="w-4 h-4" />
-              <span>Templates & Design Studio</span>
+              <span>Step 2 of 3: Visual Design</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               Choose Your Template & Styling
@@ -112,14 +147,6 @@ export const TemplatesStudio: React.FC<TemplatesStudioProps> = ({
               Switching templates instantly re-styles both your <strong>Web Portfolio</strong> and <strong>Printable Resume</strong>.
             </p>
           </div>
-
-          <button
-            onClick={onOpenResume}
-            className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-blue-300 text-xs font-semibold flex items-center gap-1.5 self-start sm:self-auto cursor-pointer transition-all shadow-xs"
-          >
-            <span>Preview in Resume Studio</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
         </div>
 
         {/* Clear Data Protection Reassurance */}
@@ -380,6 +407,31 @@ export const TemplatesStudio: React.FC<TemplatesStudioProps> = ({
             })}
           </div>
         </div>
+      </div>
+
+      {/* Step 2 to Step 3 Next Action Card */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-950/70 to-slate-900 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
+            3
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">
+              Step 2 Finished? Next: Page Count, Spacing & PDF Download
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Set your target length to 1 Page or 2 Pages, fine-tune margins & spacing, and export your crisp PDF.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onOpenResume}
+          className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 cursor-pointer shrink-0"
+        >
+          <span>Next: Step 3 (Page & Spacing)</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );

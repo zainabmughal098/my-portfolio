@@ -130,6 +130,7 @@ export default function App() {
                 data={data}
                 onChange={setData}
                 onOpenResume={() => setViewMode('resume')}
+                onOpenTemplates={() => setViewMode('themes')}
                 onStartBlank={handleStartBlank}
                 onLoadDemo={handleLoadDemo}
               />
@@ -149,6 +150,7 @@ export default function App() {
               data={data}
               onChange={setData}
               onOpenResume={() => setViewMode('resume')}
+              onOpenTemplates={() => setViewMode('themes')}
               onStartBlank={handleStartBlank}
               onLoadDemo={handleLoadDemo}
             />
