@@ -14,18 +14,41 @@ import { FIELD_TEMPLATES, FieldTemplate } from './data/templates';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
 
+// Helper to ensure legacy placeholder dummy values are wiped to empty strings so user only sees hints
+function sanitizeBlankCanvas(portfolio: PortfolioData): PortfolioData {
+  const p = { ...portfolio };
+  if (p.personal) {
+    p.personal = { ...p.personal };
+    if (p.personal.name === 'Your Name') p.personal.name = '';
+    if (p.personal.roleTitle === 'Software Engineer & Designer') p.personal.roleTitle = '';
+    if (p.personal.headline === 'Building thoughtful digital products, clean interfaces, and modern applications.') p.personal.headline = '';
+    if (p.personal.location === 'City, Country (or Remote)') p.personal.location = '';
+    if (p.personal.statusText === 'Open to new opportunities & freelance projects') p.personal.statusText = '';
+    if (p.personal.bioShort?.includes('A brief 1-2 sentence introduction')) p.personal.bioShort = '';
+    if (p.personal.bioLong?.includes('Write a few paragraphs about your background')) p.personal.bioLong = '';
+  }
+  if (p.contact?.email === 'you@example.com') {
+    p.contact = { ...p.contact, email: '' };
+  }
+  if (p.socials?.github === 'https://github.com/your-username') {
+    p.socials = { ...p.socials, github: '', linkedin: '', email: '' };
+  }
+  return p;
+}
+
 export default function App() {
   const [data, setData] = useState<PortfolioData>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return sanitizeBlankCanvas(parsed);
       }
     } catch (e) {
       console.warn('Failed to parse cached portfolio', e);
     }
-    // Default to clean blank template so shared/deployed links don't have confusing fake demo data
-    return BLANK_PORTFOLIO_TEMPLATE;
+    // Default to clean blank template
+    return sanitizeBlankCanvas(BLANK_PORTFOLIO_TEMPLATE);
   });
 
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
@@ -75,21 +98,15 @@ export default function App() {
   };
 
   const handleSelectPreset = (preset: PortfolioData) => {
-    if (window.confirm(`Switch to the "${preset.name}" preset? Any unsaved edits will be replaced.`)) {
-      setData(preset);
-    }
+    setData(preset);
   };
 
   const handleStartBlank = () => {
-    if (window.confirm('Start fresh with a clean, blank portfolio canvas? Your current inputs will be reset.')) {
-      setData(BLANK_PORTFOLIO_TEMPLATE);
-    }
+    setData(sanitizeBlankCanvas(BLANK_PORTFOLIO_TEMPLATE));
   };
 
   const handleLoadDemo = () => {
-    if (window.confirm('Load sample demo portfolio for design inspiration?')) {
-      setData(PRESET_PRODUCT_DESIGNER);
-    }
+    setData(PRESET_PRODUCT_DESIGNER);
   };
 
   const handleReset = () => {

@@ -291,8 +291,8 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
 
   const handleCopyPlainText = () => {
     const lines: string[] = [];
-    lines.push(personal.name.toUpperCase());
-    lines.push(`${personal.roleTitle} | ${personal.location}`);
+    lines.push((personal.name || 'YOUR NAME').toUpperCase());
+    lines.push(`${personal.roleTitle || 'Professional Title'} | ${personal.location || 'Location'}`);
     lines.push(`Email: ${contact.email || personal.email || socials.email || ''}`);
     if (socials.github) lines.push(`GitHub: ${socials.github}`);
     if (socials.linkedin) lines.push(`LinkedIn: ${socials.linkedin}`);
@@ -1148,7 +1148,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                     <>
                       <span>|</span>
                       <a href={socials.linkedin} target="_blank" rel="noreferrer" className="text-blue-700 underline">
-                        linkedin.com/in/{personal.name.toLowerCase().replace(/\s+/g, '')}
+                        {socials.linkedin.replace(/^https?:\/\/(www\.)?/, '') || `linkedin.com/in/${(personal.name || 'profile').toLowerCase().replace(/\s+/g, '')}`}
                       </a>
                     </>
                   )}

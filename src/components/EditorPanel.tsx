@@ -94,10 +94,10 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   const addEducation = () => {
     const newEdu: EducationItem = {
       id: `edu-${Date.now()}`,
-      institution: 'University / Institute',
-      degree: 'B.S. / M.S. in Computer Science or Design',
-      period: '2018 — 2022',
-      location: 'City, Country',
+      institution: '',
+      degree: '',
+      period: '',
+      location: '',
     };
     onChange({
       ...data,
@@ -123,12 +123,12 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   const addProject = () => {
     const newProj: ProjectItem = {
       id: `proj-${Date.now()}`,
-      title: 'New Project Title',
-      subtitle: 'Brief 1-sentence descriptor',
-      category: 'Product Design',
+      title: '',
+      subtitle: '',
+      category: '',
       year: `${new Date().getFullYear()}`,
-      description: 'Comprehensive overview of problems solved, methodology, and outcome metrics.',
-      tags: ['Design', 'TypeScript', 'Frontend'],
+      description: '',
+      tags: [],
       featured: false,
       imageUrl: '',
     };
@@ -166,12 +166,12 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   const addExperience = () => {
     const newExp: ExperienceItem = {
       id: `exp-${Date.now()}`,
-      company: 'Acme Corp',
-      role: 'Senior Engineer / Designer',
-      period: '2024 — Present',
-      location: 'Remote',
-      summary: 'Directed strategic initiatives and core platform architecture.',
-      highlights: ['Shipped major platform redesign', 'Mentored junior developers'],
+      company: '',
+      role: '',
+      period: '',
+      location: '',
+      summary: '',
+      highlights: [],
     };
     onChange({
       ...data,
@@ -197,8 +197,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   const addSkillCategory = () => {
     const newCat: SkillCategory = {
       id: `sk-${Date.now()}`,
-      category: 'New Specialty',
-      items: ['Skill One', 'Skill Two'],
+      category: '',
+      items: [],
     };
     onChange({
       ...data,
@@ -346,7 +346,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                   type="text"
                   value={data.personal.name}
                   onChange={(e) => updatePersonal('name', e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white focus:outline-none focus:border-blue-500"
+                  placeholder="e.g. Alex Morgan"
+                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -356,7 +357,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                   type="text"
                   value={data.personal.roleTitle}
                   onChange={(e) => updatePersonal('roleTitle', e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white focus:outline-none focus:border-blue-500"
+                  placeholder="e.g. Senior Software Engineer & Designer"
+                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
@@ -367,8 +369,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                 rows={2}
                 value={data.personal.headline}
                 onChange={(e) => updatePersonal('headline', e.target.value)}
-                placeholder="Large typographic hero statement..."
-                className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white focus:outline-none focus:border-blue-500"
+                placeholder="e.g. Building thoughtful digital products, clean interfaces, and modern applications."
+                className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -379,8 +381,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                   type="text"
                   value={data.personal.location}
                   onChange={(e) => updatePersonal('location', e.target.value)}
-                  placeholder="San Francisco, CA & Remote"
-                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white focus:outline-none focus:border-blue-500"
+                  placeholder="e.g. City, Country (or Remote)"
+                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -398,8 +400,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                     type="text"
                     value={data.personal.statusText}
                     onChange={(e) => updatePersonal('statusText', e.target.value)}
-                    placeholder="Available for Q4 contracts"
-                    className="flex-1 px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white focus:outline-none focus:border-blue-500"
+                    placeholder="e.g. Open to new opportunities & freelance projects"
+                    className="flex-1 px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -411,7 +413,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                 rows={2}
                 value={data.personal.bioShort}
                 onChange={(e) => updatePersonal('bioShort', e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white focus:outline-none focus:border-blue-500"
+                placeholder="e.g. A brief 1-2 sentence introduction about what you do, who you are, and what you love building."
+                className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -421,7 +424,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                 rows={4}
                 value={data.personal.bioLong}
                 onChange={(e) => updatePersonal('bioLong', e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white focus:outline-none focus:border-blue-500"
+                placeholder="e.g. Write a few paragraphs about your background, the tools and technologies you enjoy working with, your philosophy, and what kind of problems you love solving."
+                className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -523,7 +527,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={proj.title}
                         onChange={(e) => updateProject(proj.id, 'title', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. Featured Web Application"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -532,7 +537,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={proj.subtitle}
                         onChange={(e) => updateProject(proj.id, 'subtitle', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. Modern web application built with React & TypeScript"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                   </div>
@@ -544,7 +550,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={proj.category}
                         onChange={(e) => updateProject(proj.id, 'category', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. Web App"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -553,7 +560,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={proj.year}
                         onChange={(e) => updateProject(proj.id, 'year', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. 2026"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -562,7 +570,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={proj.client || ''}
                         onChange={(e) => updateProject(proj.id, 'client', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. Personal Project"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                   </div>
@@ -573,7 +582,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                       rows={2}
                       value={proj.description}
                       onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      placeholder="e.g. Describe what the project does, the problem it solves, and why you created it."
+                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                     />
                   </div>
 
@@ -707,7 +717,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={exp.role}
                         onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. Senior Software Engineer"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -716,7 +727,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={exp.company}
                         onChange={(e) => updateExperience(exp.id, 'company', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. Acme Corp / Google"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -725,7 +737,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={exp.period}
                         onChange={(e) => updateExperience(exp.id, 'period', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. 2024 — Present"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                   </div>
@@ -736,7 +749,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                       rows={2}
                       value={exp.summary}
                       onChange={(e) => updateExperience(exp.id, 'summary', e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      placeholder="e.g. Directed strategic initiatives and core platform architecture."
+                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                     />
                   </div>
 
@@ -752,7 +766,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                           e.target.value.split('\n').filter((l) => l.trim().length > 0)
                         )
                       }
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      placeholder="e.g. Shipped major platform redesign&#10;Mentored junior developers"
+                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                     />
                   </div>
                 </div>
@@ -798,7 +813,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={edu.degree}
                         onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. B.S. in Computer Science"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -807,7 +823,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={edu.institution}
                         onChange={(e) => updateEducation(edu.id, 'institution', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. Stanford University"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                   </div>
@@ -819,8 +836,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={edu.period}
                         onChange={(e) => updateEducation(edu.id, 'period', e.target.value)}
-                        placeholder="2018 — 2022"
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. 2020 — 2024"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                     <div>
@@ -829,8 +846,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                         type="text"
                         value={edu.location || ''}
                         onChange={(e) => updateEducation(edu.id, 'location', e.target.value)}
-                        placeholder="Cambridge, MA (Summa Cum Laude)"
-                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                        placeholder="e.g. Stanford, CA"
+                        className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                       />
                     </div>
                   </div>
@@ -865,7 +882,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                       type="text"
                       value={skillGroup.category}
                       onChange={(e) => updateSkillCategory(skillGroup.id, e.target.value)}
-                      className="px-2.5 py-1 text-xs font-bold bg-slate-950 border border-slate-700 rounded text-white max-w-xs"
+                      placeholder="e.g. Core Languages & Frameworks"
+                      className="px-2.5 py-1 text-xs font-bold bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500 max-w-xs"
                     />
                     <button
                       onClick={() => removeSkillCategory(skillGroup.id)}
@@ -881,7 +899,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                       type="text"
                       value={skillGroup.items.join(', ')}
                       onChange={(e) => updateSkillItems(skillGroup.id, e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white"
+                      placeholder="e.g. React, TypeScript, Tailwind CSS, Next.js, Node.js"
+                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded text-white placeholder-slate-500"
                     />
                   </div>
                 </div>
@@ -1087,7 +1106,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                   type="email"
                   value={data.contact.email}
                   onChange={(e) => updateContact('email', e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                  placeholder="e.g. you@example.com"
+                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -1097,8 +1117,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                   type="text"
                   value={data.contact.calendlyUrl || ''}
                   onChange={(e) => updateContact('calendlyUrl', e.target.value)}
-                  placeholder="https://calendly.com/your-name/intro"
-                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                  placeholder="e.g. https://calendly.com/your-name/intro"
+                  className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -1109,8 +1129,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                     type="text"
                     value={data.socials.github || ''}
                     onChange={(e) => updateSocials('github', e.target.value)}
-                    placeholder="https://github.com/..."
-                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                    placeholder="e.g. https://github.com/your-username"
+                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -1119,8 +1139,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                     type="text"
                     value={data.socials.linkedin || ''}
                     onChange={(e) => updateSocials('linkedin', e.target.value)}
-                    placeholder="https://linkedin.com/in/..."
-                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                    placeholder="e.g. https://linkedin.com/in/your-username"
+                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -1129,8 +1149,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                     type="text"
                     value={data.socials.twitter || ''}
                     onChange={(e) => updateSocials('twitter', e.target.value)}
-                    placeholder="https://x.com/..."
-                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                    placeholder="e.g. https://x.com/your-handle"
+                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
@@ -1139,8 +1159,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
                     type="text"
                     value={data.socials.dribbble || ''}
                     onChange={(e) => updateSocials('dribbble', e.target.value)}
-                    placeholder="https://dribbble.com/..."
-                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white"
+                    placeholder="e.g. https://dribbble.com/your-handle"
+                    className="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-md text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>

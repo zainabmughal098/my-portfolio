@@ -185,7 +185,7 @@ export const PortfolioRenderer: React.FC<PortfolioRendererProps> = ({
             href="#hero"
             className={`text-lg font-bold tracking-tight transition-opacity hover:opacity-80 ${headingFontClass}`}
           >
-            {personal.name}
+            {personal.name || 'Your Name'}
           </a>
 
           {/* Zone 2: 4-6 clean text navigation links */}
@@ -246,7 +246,7 @@ export const PortfolioRenderer: React.FC<PortfolioRendererProps> = ({
                 )}
 
                 <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] ${headingFontClass}`}>
-                  {personal.headline || personal.name}
+                  {personal.headline || personal.name || 'Your Name'}
                 </h1>
 
                 <p className={`text-lg sm:text-xl leading-relaxed max-w-xl ${themeStyles.muted}`}>
@@ -367,8 +367,8 @@ export const PortfolioRenderer: React.FC<PortfolioRendererProps> = ({
                     />
                   ) : (
                     <div className={`w-full h-full flex flex-col items-center justify-center border ${themeStyles.border} ${themeStyles.surface} ${radiusClass}`}>
-                      <span className={`text-5xl font-bold ${headingFontClass}`}>{personal.name.charAt(0)}</span>
-                      <span className="text-xs text-slate-400 mt-2 font-medium">{personal.roleTitle}</span>
+                      <span className={`text-5xl font-bold ${headingFontClass}`}>{(personal.name || 'Y').charAt(0)}</span>
+                      <span className="text-xs text-slate-400 mt-2 font-medium">{personal.roleTitle || 'Portfolio'}</span>
                     </div>
                   )}
                 </div>
