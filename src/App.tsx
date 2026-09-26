@@ -10,6 +10,7 @@ import { ExportModal } from './components/ExportModal';
 import { TemplateModal } from './components/TemplateModal';
 import { ResumeView } from './components/ResumeView';
 import { SocialSharePreview } from './components/SocialSharePreview';
+import { AppWalkthrough } from './components/AppWalkthrough';
 import { FIELD_TEMPLATES, FieldTemplate } from './data/templates';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
@@ -55,6 +56,13 @@ export default function App() {
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('desktop');
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('foliocraft_walkthrough_seen') !== 'true';
+    } catch {
+      return true;
+    }
+  });
   const [currentTemplateId, setCurrentTemplateId] = useState<string>('tech-architect');
 
   // Sync to local storage
@@ -133,6 +141,7 @@ export default function App() {
         onStartBlank={handleStartBlank}
         onLoadDemo={handleLoadDemo}
         onOpenTemplates={() => setViewMode('themes')}
+        onOpenWalkthrough={() => setIsWalkthroughOpen(true)}
         activeTemplateName={activeTemplate.name}
       />
 
@@ -148,6 +157,7 @@ export default function App() {
               onOpenTemplates={() => setViewMode('themes')}
               onStartBlank={handleStartBlank}
               onLoadDemo={handleLoadDemo}
+              onOpenWalkthrough={() => setIsWalkthroughOpen(true)}
             />
           </div>
         )}
@@ -218,6 +228,14 @@ export default function App() {
           setIsTemplatesOpen(false);
           setViewMode('resume');
         }}
+      />
+
+      {/* Interactive Onboarding Walkthrough & Product Tour */}
+      <AppWalkthrough
+        isOpen={isWalkthroughOpen}
+        onClose={() => setIsWalkthroughOpen(false)}
+        onStartBlank={handleStartBlank}
+        onLoadDemo={handleLoadDemo}
       />
     </div>
   );

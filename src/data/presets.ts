@@ -73,7 +73,7 @@ export const PRESET_PRODUCT_DESIGNER: PortfolioData = {
       year: '2024',
       description: 'An interactive digital exhibit examining how light sculpts concrete structures across 12 climate zones.',
       fullCaseStudy: 'Designed and engineered an interactive digital companion for the Biennale exhibition. Utilized low-overhead canvas shaders and high-fidelity photography to let visitors simulate shadow movement in real-time.',
-      tags: ['Spatial UX', 'Editorial Direction', 'Interactive 3D', 'WebGL'],
+      tags: ['Spatial UX', 'Editorial Direction', 'Interactive Canvas', 'WebGL'],
       liveUrl: 'https://example.com/solarium',
       featured: false,
       imageUrl: showcaseArchitecture,

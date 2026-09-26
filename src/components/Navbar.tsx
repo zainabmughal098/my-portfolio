@@ -4,6 +4,7 @@ import {
   Smartphone,
   Tablet,
   Monitor,
+  Sparkles,
 } from 'lucide-react';
 import { PortfolioData } from '../types/portfolio';
 
@@ -21,6 +22,7 @@ interface NavbarProps {
   onStartBlank?: () => void;
   onLoadDemo?: () => void;
   onOpenTemplates?: () => void;
+  onOpenWalkthrough?: () => void;
   activeTemplateName?: string;
 }
 
@@ -29,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectViewMode,
   deviceMode,
   onSelectDeviceMode,
+  onOpenWalkthrough,
 }) => {
   return (
     <header className="no-print h-14 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between text-xs text-slate-300 select-none z-30">
@@ -164,8 +167,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
       </div>
 
-      {/* Zone 3: Direct Download PDF Action (only shown if not already in Step 3 where toolbar has it) */}
+      {/* Zone 3: App Tour & Direct Download PDF Action */}
       <div className="flex items-center gap-2">
+        {onOpenWalkthrough && (
+          <button
+            onClick={onOpenWalkthrough}
+            className="px-2.5 py-1.5 rounded-lg bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 hover:text-white border border-blue-800/60 hover:border-blue-700 transition-all flex items-center gap-1.5 text-xs cursor-pointer shadow-xs"
+            title="App Tour & Feature Guide"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden md:inline">App Tour</span>
+          </button>
+        )}
+
         {viewMode !== 'resume' && (
           <button
             onClick={() => onSelectViewMode('resume')}
