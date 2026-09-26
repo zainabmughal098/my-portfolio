@@ -157,7 +157,6 @@ export default function App() {
               onOpenTemplates={() => setViewMode('themes')}
               onStartBlank={handleStartBlank}
               onLoadDemo={handleLoadDemo}
-              onOpenWalkthrough={() => setIsWalkthroughOpen(true)}
             />
           </div>
         )}

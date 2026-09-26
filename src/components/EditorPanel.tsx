@@ -44,7 +44,6 @@ interface EditorPanelProps {
   onOpenTemplates?: () => void;
   onStartBlank?: () => void;
   onLoadDemo?: () => void;
-  onOpenWalkthrough?: () => void;
 }
 
 type EditorTab =
@@ -65,7 +64,6 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   onOpenTemplates,
   onStartBlank,
   onLoadDemo,
-  onOpenWalkthrough,
 }) => {
   const [activeTab, setActiveTab] = useState<EditorTab>('profile');
   const [pickerTarget, setPickerTarget] = useState<{ type: 'avatar' } | { type: 'project'; id: string } | null>(null);
@@ -326,17 +324,6 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
               title="Load example profile for design inspiration"
             >
               <span>💡 Sample Demo</span>
-            </button>
-          )}
-          {onOpenWalkthrough && (
-            <button
-              type="button"
-              onClick={onOpenWalkthrough}
-              className="px-2.5 py-1 rounded bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 hover:text-blue-100 border border-blue-800/60 hover:border-blue-700 transition-colors flex items-center gap-1 text-[11px] font-semibold cursor-pointer shadow-xs"
-              title="Launch the interactive app intro and feature guide"
-            >
-              <Sparkles className="w-3 h-3 text-amber-300" />
-              <span>App Tour</span>
             </button>
           )}
         </div>
