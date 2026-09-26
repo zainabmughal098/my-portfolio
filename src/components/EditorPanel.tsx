@@ -42,6 +42,7 @@ interface EditorPanelProps {
   onChange: (updated: PortfolioData) => void;
   onOpenResume?: () => void;
   onOpenTemplates?: () => void;
+  onOpenPreview?: () => void;
   onStartBlank?: () => void;
   onLoadDemo?: () => void;
 }
@@ -62,6 +63,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   onChange,
   onOpenResume,
   onOpenTemplates,
+  onOpenPreview,
   onStartBlank,
   onLoadDemo,
 }) => {
