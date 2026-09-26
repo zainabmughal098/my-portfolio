@@ -53,17 +53,17 @@ const STEPS: WalkthroughStep[] = [
   },
   {
     id: 'step1',
-    badge: 'Step 1 • Enter Details',
-    title: 'Zero-Friction Content Entry',
-    headline: 'Clean placeholder hints guide your input without cluttering your canvas.',
+    badge: 'Step 1 • Basic Info & Details',
+    title: 'Zero-Friction Basic Info Entry',
+    headline: 'Fill in your name, contact, headline, bio, experience, and skills without boilerplate.',
     description:
-      'Click directly into any field and start typing your headline, bio, experience milestones, case studies, and skill categories. No tedious backspacing required.',
+      'Enter your basic information and career milestones. Helpful ghost placeholders guide each field without messy sample text you have to backspace away.',
     icon: <FileText className="w-4 h-4 text-cyan-400" />,
     features: [
-      'Helpful ghost placeholders vanish instantly as you type',
-      'Structured sections: Projects, Experience, Education, Skills, & Testimonials',
-      'Toggle sections on or off with one click to suit your career level',
-      'Continuous auto-save directly to your browser storage',
+      'Basic Info: Name, professional headline, bio, location, and social links',
+      'Structured sections: Projects, Work Experience, Education, Skills, & Awards',
+      'Manage multiple tailored resumes from "Your Resumes" in the top bar',
+      'Continuous auto-save directly to your Serverless PostgreSQL database',
     ],
     visualType: 'editor',
   },
@@ -151,12 +151,10 @@ export const AppWalkthrough: React.FC<AppWalkthroughProps> = ({
   const isLast = currentStepIndex === STEPS.length - 1;
 
   const handleDismiss = () => {
-    if (dontShowAgain) {
-      try {
-        localStorage.setItem('foliocraft_walkthrough_seen', 'true');
-      } catch (e) {
-        console.warn('Storage save warning', e);
-      }
+    try {
+      localStorage.setItem('foliocraft_walkthrough_seen', 'true');
+    } catch (e) {
+      console.warn('Storage save warning', e);
     }
     onClose();
   };
