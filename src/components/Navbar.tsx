@@ -250,13 +250,25 @@ export const Navbar: React.FC<NavbarProps> = ({
             }
           >
             {cloudSyncState === 'syncing' ? (
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <>
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <span className="font-medium text-slate-300">Syncing...</span>
+              </>
+            ) : cloudSyncState === 'error' ? (
+              <button
+                onClick={onManualSave}
+                className="flex items-center gap-1 text-amber-400 hover:text-amber-300 cursor-pointer"
+                title="Temporary network pause. Click to retry syncing."
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="font-medium">Retry Sync</span>
+              </button>
             ) : (
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="font-medium text-slate-300">Cloud Synced</span>
+              </>
             )}
-            <span className="font-medium text-slate-300">
-              {cloudSyncState === 'syncing' ? 'Syncing...' : 'Cloud Synced'}
-            </span>
           </div>
         )}
 

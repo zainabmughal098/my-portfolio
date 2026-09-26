@@ -15,7 +15,7 @@ import { AuthModal } from './components/AuthModal';
 import { MyResumesModal } from './components/MyResumesModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FIELD_TEMPLATES, FieldTemplate } from './data/templates';
-import { FolderOpen, Edit2, Check, Plus, Sparkles } from 'lucide-react';
+import { FolderOpen, Edit2, Check, Sparkles } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
 
@@ -292,20 +292,14 @@ function PortfolioApp() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setIsMyResumesOpen(true)}
-            className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+            className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-950/40 border border-blue-500/20 hover:border-blue-500/40 cursor-pointer transition-all"
+            title="Manage all your resumes"
           >
+            <FolderOpen className="w-3.5 h-3.5" />
             <span>Your Resumes</span>
-          </button>
-          <span className="text-slate-700">|</span>
-          <button
-            onClick={() => setIsMyResumesOpen(true)}
-            className="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">New Resume</span>
           </button>
         </div>
       </div>

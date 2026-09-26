@@ -286,38 +286,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? `${data.personal.name}'s Resume`
           : 'My Portfolio Resume');
 
-      let res: Response;
+      // Resilient fetch with automatic retries for temporary network/server restarts
+      const attemptFetch = async (retriesLeft = 2): Promise<Response> => {
+        try {
+          const res = resumeIdToUse
+            ? await fetch(`/api/resumes/${resumeIdToUse}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  title: titleToUse,
+                  data,
+                }),
+              })
+            : await fetch('/api/resume', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  title: titleToUse,
+                  data,
+                }),
+              });
 
-      if (resumeIdToUse) {
-        // Update existing resume
-        res = await fetch(`/api/resumes/${resumeIdToUse}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: titleToUse,
-            data,
-          }),
-        });
-      } else {
-        // Create new or update latest
-        res = await fetch('/api/resume', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: titleToUse,
-            data,
-          }),
-        });
-      }
+          if (!res.ok && res.status >= 500 && retriesLeft > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            return attemptFetch(retriesLeft - 1);
+          }
+          return res;
+        } catch (fetchErr) {
+          if (retriesLeft > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+            return attemptFetch(retriesLeft - 1);
+          }
+          throw fetchErr;
+        }
+      };
+
+      const res = await attemptFetch();
 
       if (!res.ok) {
-        throw new Error('Failed to save to cloud');
+        throw new Error(`Failed to save to cloud: status ${res.status}`);
       }
 
       const json = await res.json();
@@ -330,10 +343,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setCloudSyncState('saved');
       setLastSavedAt(new Date());
-      fetchResumesList();
+      fetchResumesList().catch(() => {});
       return true;
     } catch (err) {
-      console.error('Cloud save failed:', err);
+      console.warn('Cloud save will retry on next edit or reconnection:', err);
       setCloudSyncState('error');
       return false;
     }
