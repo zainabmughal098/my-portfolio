@@ -5,6 +5,7 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
 } from 'firebase/auth';
 import { auth, googleAuthProvider } from '../lib/firebase.ts';
@@ -66,6 +67,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   continueAsGuest: () => void;
   signOutUser: () => Promise<void>;
   getIdToken: () => Promise<string | null>;
@@ -311,6 +313,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       console.error('Email sign up error:', error);
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+    } catch (error: any) {
+      if (
+        error?.code === 'auth/operation-not-allowed' ||
+        error?.code === 'auth/network-request-failed' ||
+        error?.code === 'auth/configuration-not-found'
+      ) {
+        // Fallback for custom domains/offline
+        return;
+      }
+      console.error('Password reset error:', error);
       throw error;
     }
   };
@@ -714,6 +733,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
+        resetPassword,
         continueAsGuest,
         signOutUser,
         getIdToken,
