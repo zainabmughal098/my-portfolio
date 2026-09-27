@@ -150,14 +150,10 @@ function PortfolioApp() {
     return () => clearTimeout(debounceTimer);
   }, [data, user, saveResumeToCloud]);
 
-  // Prompt sign-in on first visit if user is not signed in
+  // Show intro modal on first open if user is not signed in yet
   useEffect(() => {
     if (!authLoading && !user) {
-      const prompted = sessionStorage.getItem('foliocraft_auth_prompted');
-      if (!prompted) {
-        sessionStorage.setItem('foliocraft_auth_prompted', 'true');
-        setIsAuthModalOpen(true);
-      }
+      setIsAuthModalOpen(true);
     }
   }, [authLoading, user]);
 
