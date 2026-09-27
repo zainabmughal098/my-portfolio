@@ -119,7 +119,7 @@ function PortfolioApp() {
     } else if (!user) {
       hasLoadedCloudRef.current = false;
     }
-  }, [user, loadResumeFromCloud, saveResumeToCloud]);
+  }, [user]);
 
   // Sync to local storage
   useEffect(() => {
@@ -148,7 +148,7 @@ function PortfolioApp() {
     }, 2000);
 
     return () => clearTimeout(debounceTimer);
-  }, [data, user, saveResumeToCloud]);
+  }, [data, user]);
 
   // Show intro modal on first open if user is not signed in yet
   useEffect(() => {

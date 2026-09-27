@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Password reset collection: allows short-lived code storage and verification
+    match /password_reset_codes/{codeId} {
+      allow read, create, update: if true;
+      allow delete: if request.auth != null;
+    }
+
+    // Default deny for other paths
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

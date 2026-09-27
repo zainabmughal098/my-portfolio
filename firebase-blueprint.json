@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "PasswordResetCode": {
+      "title": "Password Reset Code",
+      "description": "Temporary short-lived 6-digit verification code used for in-modal password resets.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User email address requesting password reset"
+        },
+        "code": {
+          "type": "string",
+          "description": "6-digit numeric verification code",
+          "minLength": 6,
+          "maxLength": 6
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp when the code was created"
+        },
+        "expiresAt": {
+          "type": "number",
+          "description": "Epoch timestamp in milliseconds after which the code expires"
+        },
+        "used": {
+          "type": "boolean",
+          "description": "Flag indicating if the code has already been verified and used"
+        }
+      },
+      "required": ["email", "code", "createdAt", "expiresAt", "used"]
+    }
+  },
+  "firestore": {
+    "/password_reset_codes/{codeId}": {
+      "schema": "PasswordResetCode",
+      "description": "Stores short-lived password reset codes keyed by normalized email address"
+    }
+  }
+}
