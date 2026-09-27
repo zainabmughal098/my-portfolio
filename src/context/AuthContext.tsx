@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await auth.currentUser.getIdToken();
   }, []);
 
-  const fetchResumesList = useCallback(async (): Promise<ResumeListItem[]> => {
+  const fetchResumesList = useCallback(async (retries = 2): Promise<ResumeListItem[]> => {
     if (!auth.currentUser) return [];
     try {
       const token = await getIdToken();
@@ -89,9 +89,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const list = json.resumes || [];
         setResumesList(list);
         return list;
+      } else if (res.status >= 500 && retries > 0) {
+        await new Promise((r) => setTimeout(r, 1000));
+        return fetchResumesList(retries - 1);
       }
     } catch (err) {
-      console.error('Failed to fetch resumes list:', err);
+      if (retries > 0) {
+        await new Promise((r) => setTimeout(r, 1000));
+        return fetchResumesList(retries - 1);
+      }
+      console.warn('Unable to reach server to list resumes (will retry on reconnect):', err);
     }
     return [];
   }, [getIdToken]);
@@ -244,6 +251,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = await getIdToken();
       if (!token) return false;
 
+      // Optimistically remove from state immediately
+      setResumesList((prev) => prev.filter((r) => r.id !== id));
+      if (activeResumeId === id) {
+        setActiveResumeId(null);
+        setActiveResumeTitle('My Portfolio Resume');
+      }
+
       const res = await fetch(`/api/resumes/${id}`, {
         method: 'DELETE',
         headers: {
@@ -252,15 +266,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (res.ok) {
-        if (activeResumeId === id) {
-          setActiveResumeId(null);
-        }
         await fetchResumesList();
         return true;
       }
+      await fetchResumesList();
       return false;
     } catch (err) {
       console.error('Delete resume error:', err);
+      await fetchResumesList();
       return false;
     }
   };

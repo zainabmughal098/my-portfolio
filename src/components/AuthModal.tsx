@@ -33,8 +33,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         onClose();
       }
     } catch (err: any) {
-      console.error(err);
-      setErrorMsg('Failed to sign in. Please try again.');
+      console.error('Sign-in error:', err);
+      const code = err?.code || '';
+      const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+      
+      if (code === 'auth/unauthorized-domain') {
+        setErrorMsg(
+          `Domain "${currentHost}" is not authorized. Add it to Firebase Console → Authentication → Settings → Authorized domains.`
+        );
+      } else if (code === 'auth/popup-blocked') {
+        setErrorMsg('Pop-up window was blocked by your browser. Please allow pop-ups for this site and try again.');
+      } else if (code === 'auth/popup-closed-by-user') {
+        setErrorMsg('Sign-in cancelled (the Google window was closed before finishing).');
+      } else if (code === 'auth/network-request-failed') {
+        setErrorMsg('Network error. Please check your internet connection and try again.');
+      } else if (err?.message?.includes('api-key') || err?.message?.includes('invalid-api-key') || code === 'auth/invalid-api-key') {
+        setErrorMsg('Missing or invalid Firebase API Key in deployment environment variables.');
+      } else {
+        setErrorMsg(err?.message || 'Failed to sign in. Please try again.');
+      }
     } finally {
       setIsSigningIn(false);
     }

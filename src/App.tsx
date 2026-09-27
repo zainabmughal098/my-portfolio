@@ -48,6 +48,7 @@ function PortfolioApp() {
     saveResumeToCloud,
     loadResumeFromCloud,
     activeResumeId,
+    setActiveResumeId,
     activeResumeTitle,
     setActiveResumeTitle,
     renameResumeInCloud,
@@ -83,6 +84,7 @@ function PortfolioApp() {
   // Track if we have already loaded the user's cloud resume on initial auth
   const hasLoadedCloudRef = useRef<boolean>(false);
   const isInitialMount = useRef<boolean>(true);
+  const isSwitchingResumeRef = useRef<boolean>(false);
 
   // Track login state to launch App Tour immediately after signing in
   const prevUserUidRef = useRef<string | null>(null);
@@ -132,6 +134,10 @@ function PortfolioApp() {
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
+      return;
+    }
+
+    if (isSwitchingResumeRef.current) {
       return;
     }
 
@@ -200,6 +206,22 @@ function PortfolioApp() {
 
   const handleReset = () => {
     handleStartBlank();
+  };
+
+  const handleSelectResume = (selectedData: PortfolioData, title: string, id: number) => {
+    isSwitchingResumeRef.current = true;
+    setData(selectedData);
+    setActiveResumeId(id > 0 ? id : null);
+    setActiveResumeTitle(title);
+    setTitleInputValue(title);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(selectedData));
+    } catch (e) {
+      console.warn('Failed to update local storage', e);
+    }
+    setTimeout(() => {
+      isSwitchingResumeRef.current = false;
+    }, 1500);
   };
 
   const handleSaveActiveTitle = async () => {
@@ -440,9 +462,7 @@ function PortfolioApp() {
         isOpen={isMyResumesOpen}
         onClose={() => setIsMyResumesOpen(false)}
         currentData={data}
-        onSelectResume={(selectedData, title) => {
-          setData(selectedData);
-        }}
+        onSelectResume={handleSelectResume}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
       />
     </div>
