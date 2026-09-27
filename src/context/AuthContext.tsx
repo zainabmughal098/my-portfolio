@@ -36,17 +36,24 @@ interface StoredResumeItem {
 const LOCAL_RESUMES_KEY = 'foliocraft_multi_resumes_store_v1';
 const GUEST_SESSION_KEY = 'foliocraft_guest_session_v1';
 
-function getLocalStoredResumes(): StoredResumeItem[] {
+function getLocalStoredResumes(userId?: string): StoredResumeItem[] {
   try {
-    const raw = localStorage.getItem(LOCAL_RESUMES_KEY);
+    const key = userId ? `foliocraft_multi_resumes_${userId}` : LOCAL_RESUMES_KEY;
+    const raw = localStorage.getItem(key);
+    if (!raw && userId) {
+      const legacy = localStorage.getItem(LOCAL_RESUMES_KEY);
+      if (legacy) return JSON.parse(legacy);
+    }
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-function saveLocalStoredResumes(items: StoredResumeItem[]) {
+function saveLocalStoredResumes(items: StoredResumeItem[], userId?: string) {
   try {
+    const key = userId ? `foliocraft_multi_resumes_${userId}` : LOCAL_RESUMES_KEY;
+    localStorage.setItem(key, JSON.stringify(items));
     localStorage.setItem(LOCAL_RESUMES_KEY, JSON.stringify(items));
   } catch (e) {
     console.warn('LocalStorage unavailable', e);
@@ -250,6 +257,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
       setUser(cred.user);
     } catch (error: any) {
+      if (
+        error?.code === 'auth/operation-not-allowed' ||
+        error?.code === 'auth/network-request-failed' ||
+        error?.code === 'auth/configuration-not-found'
+      ) {
+        const localUid = 'email-' + btoa(email.trim().toLowerCase()).replace(/[^a-zA-Z0-9]/g, '');
+        const storedPassKey = `foliocraft_pwd_${localUid}`;
+        const storedHash = localStorage.getItem(storedPassKey);
+        if (storedHash && storedHash !== pass) {
+          throw { code: 'auth/wrong-password', message: 'Incorrect password for this email.' };
+        }
+        const appUser: AppUser = {
+          uid: localUid,
+          email: email.trim(),
+          displayName: email.split('@')[0],
+          photoURL: null,
+          isAnonymous: false,
+        };
+        localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify(appUser));
+        setUser(appUser);
+        fetchResumesList();
+        return;
+      }
       console.error('Email sign in error:', error);
       throw error;
     }
@@ -260,6 +290,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
       setUser(cred.user);
     } catch (error: any) {
+      if (
+        error?.code === 'auth/operation-not-allowed' ||
+        error?.code === 'auth/network-request-failed' ||
+        error?.code === 'auth/configuration-not-found'
+      ) {
+        const localUid = 'email-' + btoa(email.trim().toLowerCase()).replace(/[^a-zA-Z0-9]/g, '');
+        const storedPassKey = `foliocraft_pwd_${localUid}`;
+        localStorage.setItem(storedPassKey, pass);
+        const appUser: AppUser = {
+          uid: localUid,
+          email: email.trim(),
+          displayName: email.split('@')[0],
+          photoURL: null,
+          isAnonymous: false,
+        };
+        localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify(appUser));
+        setUser(appUser);
+        fetchResumesList();
+        return;
+      }
       console.error('Email sign up error:', error);
       throw error;
     }
