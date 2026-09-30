@@ -704,7 +704,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fallback to local
     }
 
-    const newId = Date.now();
+    // Safe 32-bit positive integer ID for local storage
+    const newId = (Date.now() % 100000000) + 1;
     const newItem: StoredResumeItem = {
       id: newId,
       title: trimmedTitle,
@@ -822,8 +823,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
         saveLocalStoredResumes(updated);
       } else {
+        const safeResumeId =
+          resumeIdToUse && resumeIdToUse > 0 && resumeIdToUse <= 2147483647
+            ? resumeIdToUse
+            : (Date.now() % 100000000) + 1;
         const itemToSave: StoredResumeItem = {
-          id: resumeIdToUse || Date.now(),
+          id: safeResumeId,
           title: titleToUse,
           data,
           createdAt: nowIso,

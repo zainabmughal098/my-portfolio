@@ -363,6 +363,12 @@ export const PortfolioRenderer: React.FC<PortfolioRendererProps> = ({
                       src={personal.avatarUrl}
                       alt={personal.name}
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.includes('unsplash')) {
+                          target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+                        }
+                      }}
                       className={`w-full h-full object-cover shadow-2xl border ${themeStyles.border} ${radiusClass}`}
                     />
                   ) : (

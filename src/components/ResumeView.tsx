@@ -36,6 +36,7 @@ import {
   Download,
   Loader2,
   HelpCircle,
+  Share2,
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
@@ -46,6 +47,7 @@ interface ResumeViewProps {
   onBack: () => void;
   onOpenTemplateGallery?: () => void;
   onOpenPreview?: () => void;
+  onOpenShare?: () => void;
 }
 
 const PAGE_HEIGHT_PX = 1040; // Printable height threshold at standard 96dpi for A4/Letter
@@ -56,6 +58,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
   onBack,
   onOpenTemplateGallery,
   onOpenPreview,
+  onOpenShare,
 }) => {
   const { personal, socials, experiences, education, skills, projects, contact, customLinks } = data;
 
@@ -456,6 +459,17 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                 </>
               )}
             </button>
+
+            {onOpenShare && (
+              <button
+                onClick={onOpenShare}
+                className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-indigo-950/60 hover:bg-indigo-900/60 text-xs font-semibold text-indigo-300 border border-indigo-700/60 flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Share direct preview link with recruiters or clients"
+              >
+                <Share2 className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden sm:inline">Share Preview</span>
+              </button>
+            )}
 
             {/* REAL CLIENT-SIDE PDF DOWNLOAD BUTTON */}
             <button

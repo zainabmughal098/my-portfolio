@@ -13,9 +13,10 @@ import { SocialSharePreview } from './components/SocialSharePreview';
 import { AppWalkthrough } from './components/AppWalkthrough';
 import { AuthModal } from './components/AuthModal';
 import { MyResumesModal } from './components/MyResumesModal';
+import { SharePreviewModal } from './components/SharePreviewModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FIELD_TEMPLATES, FieldTemplate } from './data/templates';
-import { FolderOpen, Edit2, Check, Sparkles } from 'lucide-react';
+import { FolderOpen, Edit2, Check, Sparkles, Share2, Eye, ExternalLink, Loader2 } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'foliocraft_portfolio_v2';
 
@@ -56,30 +57,192 @@ function PortfolioApp() {
 
   const [data, setData] = useState<PortfolioData>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return sanitizeBlankCanvas(parsed);
+      const params = new URLSearchParams(window.location.search);
+      const hasUrlParams = Boolean(
+        params.get('id') || params.get('view') === 'preview' || params.get('view') === 'resume'
+      );
+      // If URL parameters indicate standalone preview or shared ID, do NOT prioritize stale local storage
+      if (!hasUrlParams) {
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return sanitizeBlankCanvas(parsed);
+        }
       }
     } catch (e) {
       console.warn('Failed to parse cached portfolio', e);
     }
-    // Default to clean blank template
+    // Default to clean blank template while shared data is fetched
     return sanitizeBlankCanvas(BLANK_PORTFOLIO_TEMPLATE);
   });
 
-  const [viewMode, setViewMode] = useState<ViewMode>('editor');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlView = params.get('view');
+      if (urlView === 'preview' || urlView === 'resume' || urlView === 'themes' || urlView === 'editor') {
+        return urlView as ViewMode;
+      }
+    } catch {
+      // Ignore
+    }
+    return 'editor';
+  });
+
+  // Check if opened as standalone preview (?view=preview or ?view=resume)
+  const [isStandalonePreview, setIsStandalonePreview] = useState<boolean>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlView = params.get('view');
+      return urlView === 'preview' || urlView === 'resume';
+    } catch {
+      return false;
+    }
+  });
+
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('desktop');
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMyResumesOpen, setIsMyResumesOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState<boolean>(false);
   const [currentTemplateId, setCurrentTemplateId] = useState<string>('tech-architect');
 
   // Inline resume rename state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInputValue, setTitleInputValue] = useState('');
+
+  // Track if a public shared resume is being fetched
+  const [isLoadingShared, setIsLoadingShared] = useState<boolean>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const publicId = params.get('id');
+      const isStandalone = params.get('view') === 'preview' || params.get('view') === 'resume';
+      // In standalone preview or with a public ID, always start in loading state to prioritize URL params
+      return Boolean(publicId || isStandalone);
+    } catch {
+      return false;
+    }
+  });
+
+  // Fetch public resume data prioritizing URL parameters over localStorage
+  useEffect(() => {
+    let isCancelled = false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const publicId = params.get('id');
+      const isStandalone = params.get('view') === 'preview' || params.get('view') === 'resume';
+
+      // PRIORITY 1: Specific Public ID specified in URL (?id=...)
+      if (publicId) {
+        setIsLoadingShared(true);
+        fetch(`/api/public/resume/${publicId}`)
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+            return res.json();
+          })
+          .then((result) => {
+            if (isCancelled) return;
+            if (result && result.data) {
+              const parsed = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
+              setData(parsed);
+              if (result.title) {
+                setActiveResumeTitle(result.title);
+              }
+              if (result.id) {
+                setActiveResumeId(result.id);
+              }
+            }
+          })
+          .catch((err) => {
+            console.warn(`Public resume fetch notice for ID ${publicId}:`, err);
+            // Fallback to latest public resume if specific ID failed
+            if (!isCancelled) {
+              fetch('/api/public/resume/latest')
+                .then((res) => (res.ok ? res.json() : null))
+                .then((fallbackResult) => {
+                  if (isCancelled || !fallbackResult || !fallbackResult.data) return;
+                  const parsed =
+                    typeof fallbackResult.data === 'string'
+                      ? JSON.parse(fallbackResult.data)
+                      : fallbackResult.data;
+                  setData(parsed);
+                  if (fallbackResult.title) setActiveResumeTitle(fallbackResult.title);
+                  if (fallbackResult.id) setActiveResumeId(fallbackResult.id);
+                })
+                .catch(() => {});
+            }
+          })
+          .finally(() => {
+            if (!isCancelled) {
+              setIsLoadingShared(false);
+            }
+          });
+        return () => {
+          isCancelled = true;
+        };
+      }
+
+      // PRIORITY 2: Standalone preview requested (?view=preview or ?view=resume) without explicit ?id=
+      // Query server for latest public snapshot first to prioritize active data over local storage
+      if (isStandalone) {
+        setIsLoadingShared(true);
+        fetch('/api/public/resume/latest')
+          .then((res) => (res.ok ? res.json() : null))
+          .then((result) => {
+            if (isCancelled) return;
+            if (result && result.data) {
+              const parsed = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
+              setData(parsed);
+              if (result.title) {
+                setActiveResumeTitle(result.title);
+              }
+              if (result.id) {
+                setActiveResumeId(result.id);
+              }
+            } else {
+              // Only fallback to localStorage if database returned nothing
+              const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+              if (saved) {
+                try {
+                  const parsed = JSON.parse(saved);
+                  setData(sanitizeBlankCanvas(parsed));
+                } catch {}
+              }
+            }
+          })
+          .catch((err) => {
+            console.warn('Latest public resume fetch notice:', err);
+            if (isCancelled) return;
+            const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (saved) {
+              try {
+                const parsed = JSON.parse(saved);
+                setData(sanitizeBlankCanvas(parsed));
+              } catch {}
+            }
+          })
+          .finally(() => {
+            if (!isCancelled) {
+              setIsLoadingShared(false);
+            }
+          });
+        return () => {
+          isCancelled = true;
+        };
+      }
+
+      // Normal builder mode (not a standalone preview)
+      setIsLoadingShared(false);
+    } catch {
+      setIsLoadingShared(false);
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [setActiveResumeTitle, setActiveResumeId]);
 
   // Track if we have already loaded the user's cloud resume on initial auth
   const hasLoadedCloudRef = useRef<boolean>(false);
@@ -106,6 +269,11 @@ function PortfolioApp() {
 
   // When user logs in, automatically fetch and load their saved resume from Cloud SQL
   useEffect(() => {
+    // If opening a standalone preview or shared public preview, NEVER overwrite preview data!
+    if (isStandalonePreview) return;
+    const hasSharedId = new URLSearchParams(window.location.search).get('id');
+    if (hasSharedId) return;
+
     if (user && !hasLoadedCloudRef.current) {
       hasLoadedCloudRef.current = true;
       loadResumeFromCloud().then((cloudData) => {
@@ -119,19 +287,22 @@ function PortfolioApp() {
     } else if (!user) {
       hasLoadedCloudRef.current = false;
     }
-  }, [user]);
+  }, [user, isStandalonePreview]);
 
-  // Sync to local storage
+  // Sync to local storage ONLY in builder mode (never overwrite local storage while viewing a preview)
   useEffect(() => {
+    if (isStandalonePreview) return;
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
       console.warn('Failed to save to local storage', e);
     }
-  }, [data]);
+  }, [data, isStandalonePreview]);
 
-  // Debounced auto-save to Cloud SQL whenever data changes and user is signed in
+  // Debounced auto-save to Cloud SQL whenever data changes in builder mode
   useEffect(() => {
+    if (isStandalonePreview) return;
+
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
@@ -148,11 +319,12 @@ function PortfolioApp() {
     }, 2000);
 
     return () => clearTimeout(debounceTimer);
-  }, [data, user]);
+  }, [data, user, isStandalonePreview]);
 
-  // Show intro modal on first open if user is not signed in yet
+  // Show intro modal on first open if user is not signed in yet (unless opened with ?view=preview/resume)
   useEffect(() => {
-    if (!authLoading && !user) {
+    const isPublicPreview = new URLSearchParams(window.location.search).get('view');
+    if (!authLoading && !user && !isPublicPreview) {
       setIsAuthModalOpen(true);
     }
   }, [authLoading, user]);
@@ -190,14 +362,35 @@ function PortfolioApp() {
 
   const handleSelectPreset = (preset: PortfolioData) => {
     setData(preset);
+    saveResumeToCloud(preset);
   };
 
   const handleStartBlank = () => {
-    setData(sanitizeBlankCanvas(BLANK_PORTFOLIO_TEMPLATE));
+    const blank = sanitizeBlankCanvas(BLANK_PORTFOLIO_TEMPLATE);
+    setData(blank);
+    saveResumeToCloud(blank);
   };
 
   const handleLoadDemo = () => {
     setData(PRESET_PRODUCT_DESIGNER);
+    saveResumeToCloud(PRESET_PRODUCT_DESIGNER);
+    fetch('/api/public/save-share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data: PRESET_PRODUCT_DESIGNER,
+        title: 'Elena Rostova - Principal Staff Product Designer',
+        resumeId: activeResumeId || undefined,
+      }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((result) => {
+        if (result && result.resume && result.resume.id) {
+          setActiveResumeId(result.resume.id);
+          setActiveResumeTitle(result.resume.title);
+        }
+      })
+      .catch(() => {});
   };
 
   const handleReset = () => {
@@ -237,6 +430,76 @@ function PortfolioApp() {
     setIsEditingTitle(false);
   };
 
+  // STANDALONE PUBLIC PREVIEW: When opening a preview link (?view=preview or ?view=resume),
+  // show ONLY the pure preview visualization without the builder navbar, step buttons,
+  // subheaders, or device mockup borders.
+  if (isStandalonePreview) {
+    if (isLoadingShared) {
+      return (
+        <div className="w-screen h-screen flex flex-col items-center justify-center bg-slate-950 text-slate-300">
+          <Loader2 className="w-9 h-9 animate-spin text-blue-500 mb-4" />
+          <h2 className="text-base font-semibold text-white tracking-tight">Loading Portfolio Preview...</h2>
+          <p className="text-xs text-slate-400 mt-1">Fetching latest published portfolio visualization</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-screen h-screen overflow-y-auto bg-slate-950 font-sans text-slate-100 relative">
+        {viewMode === 'resume' ? (
+          <ResumeView
+            data={data}
+            onBack={() => {
+              const cleanUrl = window.location.origin + window.location.pathname;
+              window.history.replaceState({}, '', cleanUrl);
+              setIsStandalonePreview(false);
+              setViewMode('editor');
+            }}
+            onOpenTemplateGallery={() => setViewMode('themes')}
+            onOpenPreview={() => setViewMode('preview')}
+            onOpenShare={() => setIsShareModalOpen(true)}
+          />
+        ) : (
+          <div className="w-full min-h-screen">
+            <PortfolioRenderer data={data} isInteractive={true} />
+          </div>
+        )}
+
+        {/* Discreet Floating Action Pill at Bottom-Right for Owner/Viewer */}
+        <div className="no-print fixed bottom-4 right-4 z-50 flex items-center gap-2">
+          <button
+            onClick={() => {
+              const cleanUrl = window.location.origin + window.location.pathname;
+              window.history.replaceState({}, '', cleanUrl);
+              setIsStandalonePreview(false);
+              setViewMode('editor');
+            }}
+            className="px-3.5 py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 shadow-2xl backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 transition-all opacity-80 hover:opacity-100 cursor-pointer"
+            title="Open in FolioCraft Builder"
+          >
+            <Edit2 className="w-3.5 h-3.5 text-blue-400" />
+            <span>Open Builder</span>
+          </button>
+
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="px-3.5 py-2 rounded-full bg-blue-600/90 hover:bg-blue-500 text-white border border-blue-400/40 shadow-2xl backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 transition-all opacity-85 hover:opacity-100 cursor-pointer"
+            title="Share this public preview"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Share Link</span>
+          </button>
+        </div>
+
+        <SharePreviewModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          data={data}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
       {/* Top Bar Navigation */}
@@ -261,6 +524,7 @@ function PortfolioApp() {
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onOpenMyResumes={() => setIsMyResumesOpen(true)}
         onManualSave={() => saveResumeToCloud(data)}
+        onOpenShare={() => setIsShareModalOpen(true)}
         activeTemplateName={activeTemplate.name}
       />
 
@@ -361,16 +625,48 @@ function PortfolioApp() {
               onBack={() => setViewMode('themes')}
               onOpenTemplateGallery={() => setViewMode('themes')}
               onOpenPreview={() => setViewMode('preview')}
+              onOpenShare={() => setIsShareModalOpen(true)}
             />
           </div>
         )}
 
         {/* STEP 4: FULL PREVIEW VIEW (LIVE INTERACTIVE PORTFOLIO) */}
         {viewMode === 'preview' && (
-          <div className="w-full h-full bg-slate-950 overflow-hidden">
-            <DeviceFrame deviceMode={deviceMode}>
-              <PortfolioRenderer data={data} isInteractive={true} />
-            </DeviceFrame>
+          <div className="w-full h-full bg-slate-950 overflow-hidden relative flex flex-col">
+            {/* Quick Preview Toolbar */}
+            <div className="no-print bg-slate-900/90 border-b border-slate-800/80 px-3 sm:px-6 py-2 flex items-center justify-between gap-3 text-xs shrink-0 z-10 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-slate-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-semibold text-white">Live Portfolio Preview</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => {
+                    const previewUrl = `${window.location.origin}${window.location.pathname}?view=preview`;
+                    window.history.pushState({}, '', previewUrl);
+                    setIsStandalonePreview(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition-all flex items-center gap-1.5 text-xs cursor-pointer shadow-xs"
+                  title="View full-screen exactly as recipients will see it"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Fullscreen View</span>
+                </button>
+                <button
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all flex items-center gap-1.5 text-xs cursor-pointer shadow-xs active:scale-95"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share Preview</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+              <DeviceFrame deviceMode={deviceMode}>
+                <PortfolioRenderer data={data} isInteractive={true} />
+              </DeviceFrame>
+            </div>
           </div>
         )}
 
@@ -460,6 +756,13 @@ function PortfolioApp() {
         currentData={data}
         onSelectResume={handleSelectResume}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
+      />
+
+      {/* Public Share Preview Link Modal */}
+      <SharePreviewModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        data={data}
       />
     </div>
   );

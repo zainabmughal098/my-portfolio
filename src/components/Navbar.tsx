@@ -12,6 +12,7 @@ import {
   FileText,
   ChevronDown,
   Plus,
+  Share2,
 } from 'lucide-react';
 import { PortfolioData } from '../types/portfolio';
 import { useAuth } from '../context/AuthContext.tsx';
@@ -35,6 +36,7 @@ interface NavbarProps {
   onOpenMyResumes?: () => void;
   activeTemplateName?: string;
   onManualSave?: () => void;
+  onOpenShare?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -46,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuthModal,
   onOpenMyResumes,
   onManualSave,
+  onOpenShare,
 }) => {
   const { user, signOutUser, cloudSyncState, lastSavedAt, resumesList, activeResumeTitle } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -361,6 +364,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span className="hidden sm:inline">App Tour</span>
+          </button>
+        )}
+
+        {onOpenShare && (
+          <button
+            onClick={onOpenShare}
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-indigo-950/50 hover:bg-indigo-900/60 text-indigo-300 hover:text-white border border-indigo-700/60 transition-all flex items-center gap-1.5 text-xs cursor-pointer shadow-xs shrink-0"
+            title="Share Public Preview Link with recruiters or clients"
+          >
+            <Share2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <span className="hidden sm:inline">Share Preview</span>
           </button>
         )}
 

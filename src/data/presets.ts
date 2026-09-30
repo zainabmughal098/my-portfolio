@@ -1,10 +1,13 @@
 import { PortfolioData } from '../types/portfolio';
 
-// Generated visual assets
-import avatarDesigner from '../assets/images/designer_avatar_1790269370230.jpg';
-import showcaseFintech from '../assets/images/showcase_fintech_1790269388058.jpg';
-import showcaseBranding from '../assets/images/showcase_branding_1790269404610.jpg';
-import showcaseArchitecture from '../assets/images/showcase_architecture_1790269420330.jpg';
+// Public CDN visual assets for reliable cross-platform rendering (online & offline HTML export)
+const avatarDesigner = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+const avatarEngineer = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80';
+const avatarDirector = 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80';
+
+const showcaseFintech = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80';
+const showcaseBranding = 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80';
+const showcaseArchitecture = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80';
 
 export const PRESET_PRODUCT_DESIGNER: PortfolioData = {
   id: 'preset-designer',
@@ -189,7 +192,7 @@ export const PRESET_FULLSTACK_ENGINEER: PortfolioData = {
     statusAvailable: true,
     bioShort: '12 years building distributed consensus systems, zero-copy networking engines, and type-safe frontends.',
     bioLong: 'I specialize in systems that operate under extreme load without breaking a sweat. From writing custom Raft state machines in Rust to optimizing browser bundle hydration, I care deeply about end-to-end performance and mechanical sympathy.',
-    avatarUrl: avatarDesigner,
+    avatarUrl: avatarEngineer,
     resumeUrl: '#resume',
   },
   socials: {
@@ -339,7 +342,7 @@ export const PRESET_ART_DIRECTOR: PortfolioData = {
     statusAvailable: true,
     bioShort: 'Specializing in high-fashion editorial imagery, brand identity systems, and spatial scenography.',
     bioLong: 'With a background in fine art printmaking and contemporary cinematography, I craft visual worlds where restraint speaks louder than noise. Every frame is measured, every typeface is purposeful, and every composition honors the subject.',
-    avatarUrl: avatarDesigner,
+    avatarUrl: avatarDirector,
     resumeUrl: '#portfolio-pdf',
   },
   socials: {

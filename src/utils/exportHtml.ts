@@ -1,5 +1,37 @@
 import { PortfolioData } from '../types/portfolio';
 
+const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+const FALLBACK_FINTECH = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80';
+const FALLBACK_BRANDING = 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80';
+const FALLBACK_ARCHITECTURE = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80';
+
+export function resolveExportImageUrl(url: string | undefined, defaultFallback: string = ''): string {
+  if (!url || typeof url !== 'string') return defaultFallback;
+  const trimmed = url.trim();
+  if (!trimmed) return defaultFallback;
+
+  // If already an absolute web URL or base64 data URI, use it directly
+  if (trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('data:')) {
+    return trimmed;
+  }
+
+  // If it's a local Vite development file path (e.g. /@fs/... or /src/assets/...)
+  if (trimmed.includes('designer_avatar') || trimmed.includes('avatar')) {
+    return FALLBACK_AVATAR;
+  }
+  if (trimmed.includes('fintech')) {
+    return FALLBACK_FINTECH;
+  }
+  if (trimmed.includes('branding')) {
+    return FALLBACK_BRANDING;
+  }
+  if (trimmed.includes('architecture')) {
+    return FALLBACK_ARCHITECTURE;
+  }
+
+  return defaultFallback || trimmed;
+}
+
 export function generateStandaloneHtml(data: PortfolioData): string {
   const { personal, socials, stats, projects, experiences, skills, testimonials, contact, sections, theme } = data;
 
@@ -478,7 +510,13 @@ export function generateStandaloneHtml(data: PortfolioData): string {
         </div>
         ${personal.avatarUrl ? `
         <div>
-          <img src="${escapeHtml(personal.avatarUrl)}" alt="${escapeHtml(personal.name)}" class="hero-avatar" />
+          <img
+            src="${escapeHtml(resolveExportImageUrl(personal.avatarUrl, FALLBACK_AVATAR))}"
+            alt="${escapeHtml(personal.name)}"
+            class="hero-avatar"
+            loading="lazy"
+            onerror="this.onerror=null; this.src='${FALLBACK_AVATAR}';"
+          />
         </div>` : ''}
       </div>
     </div>
@@ -524,7 +562,14 @@ export function generateStandaloneHtml(data: PortfolioData): string {
       <div class="projects-grid">
         ${projects.map(p => `
           <div class="project-card">
-            ${p.imageUrl ? `<img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.title)}" class="project-img" />` : ''}
+            ${p.imageUrl ? `
+              <img
+                src="${escapeHtml(resolveExportImageUrl(p.imageUrl, FALLBACK_FINTECH))}"
+                alt="${escapeHtml(p.title)}"
+                class="project-img"
+                loading="lazy"
+                onerror="this.onerror=null; this.src='${FALLBACK_FINTECH}';"
+              />` : ''}
             <div class="project-body">
               <div class="project-meta">
                 <span>${escapeHtml(p.category)}</span>
