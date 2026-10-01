@@ -52,12 +52,27 @@ function saveLocalStoredResumes(items: StoredResumeItem[], userId?: string) {
   }
 }
 
+export const getAppPublicRedirectUrl = (): string => {
+  try {
+    const origin = window.location.origin;
+    // Development container URLs (ais-dev-*) require the owner's Google account and cause 403 Forbidden for other emails/accounts.
+    // The shared preview URL (ais-pre-*) is open to all accounts and emails without Google 403 errors.
+    if (origin.includes('ais-dev-')) {
+      return origin.replace('ais-dev-', 'ais-pre-');
+    }
+    return origin;
+  } catch {
+    return 'https://ais-pre-htkkibafemzqjyrk7blw4w-313682511806.asia-east1.run.app';
+  }
+};
+
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   isPasswordRecovery: boolean;
   setIsPasswordRecovery: (val: boolean) => void;
   signInWithGoogle: () => Promise<void>;
+  signInWithGithub: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -274,12 +289,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: getAppPublicRedirectUrl(),
         },
       });
       if (error) throw error;
     } catch (error: any) {
       console.error('Google Sign In error:', error);
+      throw error;
+    }
+  };
+
+  const signInWithGithub = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: getAppPublicRedirectUrl(),
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('GitHub Sign In error:', error);
       throw error;
     }
   };
@@ -329,6 +359,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: cleanEmail,
       password: cleanPass,
       options: {
+        emailRedirectTo: getAppPublicRedirectUrl(),
         data: {
           full_name: cleanEmail.split('@')[0],
         },
@@ -356,7 +387,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (email: string) => {
     const cleanEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: window.location.origin,
+      redirectTo: getAppPublicRedirectUrl(),
     });
     if (error) throw new Error(error.message);
   };
@@ -369,7 +400,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!cleanEmail) throw new Error('Please enter a valid email address.');
 
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: window.location.origin,
+      redirectTo: getAppPublicRedirectUrl(),
     });
     if (error) {
       throw new Error(error.message || 'Could not send reset email.');
@@ -884,6 +915,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isPasswordRecovery,
         setIsPasswordRecovery,
         signInWithGoogle,
+        signInWithGithub,
         signInWithEmail,
         signUpWithEmail,
         resetPassword,

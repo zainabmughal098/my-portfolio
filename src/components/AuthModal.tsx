@@ -43,7 +43,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [forgotStep, setForgotStep] = useState<'send_code' | 'enter_code'>('send_code');
 
-  const [email, setEmail] = useState(() => user?.email || 'zainabsalman992@gmail.com');
+  const [email, setEmail] = useState(() => user?.email || '');
   const [password, setPassword] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -84,13 +84,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setInfoMsg(null);
       if (authMode === 'signup') {
         await signUpWithEmail(email, password);
+        setInfoMsg(`Account created for ${email}! You can now sign in, or click "Open as Guest" to enter immediately.`);
       } else {
         await signInWithEmail(email, password);
       }
       if (onSuccess) onSuccess();
       if (onClose) onClose();
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Authentication error. You can also click "Open as Guest" below.');
+      const msg = err?.message || '';
+      if (msg.includes('already registered')) {
+        setErrorMsg('This email is already registered! Please switch to the "Sign In" tab to log in with your password.');
+      } else if (msg.includes('rate limit') || msg.includes('once every')) {
+        setErrorMsg('Email rate limit reached. Please wait a moment or click "Open as Guest" to start building immediately!');
+      } else {
+        setErrorMsg(msg || 'Authentication error. You can also click "Open as Guest" below.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -146,17 +154,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }, 1200);
     } catch (err: any) {
       // Direct rescue: Try signing in or creating account with this password directly!
-      const targetEmail = (email.trim() || 'zainabsalman992@gmail.com').toLowerCase();
+      const targetEmail = (email.trim() || user?.email || '').toLowerCase();
       let rescued = false;
-      try {
-        await signInWithEmail(targetEmail, newPassword);
-        rescued = true;
-      } catch {
+      if (targetEmail) {
         try {
-          await signUpWithEmail(targetEmail, newPassword);
+          await signInWithEmail(targetEmail, newPassword);
           rescued = true;
         } catch {
-          // Both failed
+          try {
+            await signUpWithEmail(targetEmail, newPassword);
+            rescued = true;
+          } catch {
+            // Both failed
+          }
         }
       }
 
