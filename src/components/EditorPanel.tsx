@@ -281,9 +281,9 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   ];
 
   return (
-    <div className="h-full flex flex-col bg-slate-950 text-slate-200 border-r border-slate-800 select-none overflow-hidden">
+    <div className="h-full w-full flex flex-col bg-slate-950 text-slate-200 select-none overflow-hidden">
       {/* Sub-navigation bar inside editor */}
-      <div className="flex items-center gap-1 p-2 bg-slate-900 border-b border-slate-800 overflow-x-auto scrollbar-none text-xs shrink-0">
+      <div className="flex items-center gap-1 px-3 sm:px-6 py-2 bg-slate-900 border-b border-slate-800 overflow-x-auto scrollbar-none text-xs shrink-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -301,7 +301,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
       </div>
 
       {/* Quick Starter Bar: Clean Canvas vs Load Sample */}
-      <div className="px-3 py-2 bg-slate-900/60 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="px-3 sm:px-6 py-2 bg-slate-900/60 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-1.5 text-slate-300">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span className="font-semibold text-slate-200">Portfolio Data:</span>
@@ -332,7 +332,8 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
       </div>
 
       {/* Scrollable Form Content */}
-      <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6">
+        <div className="max-w-5xl mx-auto space-y-6">
         {/* PROFILE TAB */}
         {activeTab === 'profile' && (
           <div className="space-y-5">
@@ -1313,10 +1314,11 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* STEP PROGRESSION FOOTER BAR (Ensures smooth flow: Details -> Templates -> Page & Spacing) */}
-      <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs shrink-0 z-10 shadow-lg">
+      <div className="px-3 sm:px-6 py-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs shrink-0 z-10 shadow-lg">
         <div className="flex items-center gap-2">
           <span className="w-5 h-5 rounded-full bg-blue-600/30 text-blue-300 font-bold flex items-center justify-center text-[10px]">
             1

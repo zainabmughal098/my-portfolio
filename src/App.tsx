@@ -573,24 +573,13 @@ function PortfolioApp() {
             </div>
           )}
         </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setIsMyResumesOpen(true)}
-            className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-950/40 border border-blue-500/20 hover:border-blue-500/40 cursor-pointer transition-all"
-            title="Manage all your resumes"
-          >
-            <FolderOpen className="w-3.5 h-3.5" />
-            <span>Your Resumes</span>
-          </button>
-        </div>
       </div>
 
       {/* Workspace Body */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* STEP 1: ENTER DETAILS */}
         {(viewMode === 'editor' || viewMode === 'split') && (
-          <div className="w-full max-w-5xl mx-auto h-full flex flex-col">
+          <div className="w-full h-full flex flex-col">
             <EditorPanel
               data={data}
               onChange={setData}

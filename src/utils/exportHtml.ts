@@ -61,6 +61,10 @@ export function generateStandaloneHtml(data: PortfolioData): string {
 
   const radiusVal = theme.borderRadius === 'none' ? '0px' : theme.borderRadius === 'sm' ? '4px' : theme.borderRadius === 'lg' ? '16px' : '8px';
 
+  const density = theme.layoutDensity || 'comfortable';
+  const sectionPad = density === 'compact' ? '40px 0' : density === 'spacious' ? '68px 0' : '52px 0';
+  const heroPad = density === 'compact' ? '40px 0 32px 0' : density === 'spacious' ? '64px 0 48px 0' : '48px 0 36px 0';
+
   // Section visibility check helper
   const isEnabled = (secId: string) => {
     const s = sections.find(sec => sec.id === secId);
@@ -165,72 +169,87 @@ export function generateStandaloneHtml(data: PortfolioData): string {
       line-height: 1.15;
     }
     .section-title {
-      font-size: 2rem;
-      margin-bottom: 12px;
+      font-size: 1.75rem;
+      margin-bottom: 8px;
       font-weight: 700;
     }
     .section-subtitle {
       color: ${mutedColor};
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       max-width: 600px;
-      margin-bottom: 48px;
+      margin-bottom: 32px;
     }
 
     /* Hero */
     .hero-section {
-      padding: 96px 0 64px 0;
+      padding: ${heroPad};
       border-bottom: 1px solid ${borderColor};
     }
     .hero-split {
       display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 64px;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 44px;
       align-items: center;
     }
     .status-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: ${mutedColor};
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #10b981;
       display: inline-block;
     }
     .hero-title {
-      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-size: clamp(2rem, 3.8vw, 3.25rem);
       font-weight: 800;
-      line-height: 1.08;
-      margin-bottom: 24px;
+      line-height: 1.12;
+      margin-bottom: 16px;
+      letter-spacing: -0.025em;
     }
-    .hero-tagline {
-      font-size: 1.25rem;
+    .hero-bio {
+      font-size: 1.05rem;
       color: ${mutedColor};
-      line-height: 1.5;
-      margin-bottom: 32px;
+      line-height: 1.6;
+      margin-bottom: 24px;
       max-width: 580px;
+    }
+    .hero-avatar-container {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .hero-avatar-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 360px;
+      aspect-ratio: 1/1;
+      border-radius: ${radiusVal};
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0,0,0,0.15);
+      border: 1px solid ${borderColor};
+      background: ${cardBg};
     }
     .hero-avatar {
       width: 100%;
-      aspect-ratio: 1/1;
-      border-radius: ${radiusVal};
+      height: 100%;
       object-fit: cover;
-      border: 1px solid ${borderColor};
-      box-shadow: 0 20px 40px -15px rgba(0,0,0,0.15);
+      display: block;
     }
     .social-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
-      margin-top: 32px;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+      font-size: 0.85rem;
     }
     .social-link {
-      font-size: 0.875rem;
       color: ${mutedColor};
       transition: color 0.15s;
     }
@@ -239,9 +258,9 @@ export function generateStandaloneHtml(data: PortfolioData): string {
     /* Stats bar */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 24px;
-      padding: 48px 0;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      padding: 32px 0;
       border-bottom: 1px solid ${borderColor};
     }
     .stat-card {
@@ -249,34 +268,34 @@ export function generateStandaloneHtml(data: PortfolioData): string {
       flex-direction: column;
     }
     .stat-val {
-      font-size: 2.25rem;
+      font-size: 2rem;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       color: ${textColor};
     }
     .stat-lbl {
-      font-size: 0.875rem;
+      font-size: 0.825rem;
       font-weight: 600;
       color: ${textColor};
-      margin-top: 4px;
+      margin-top: 3px;
     }
     .stat-ctx {
-      font-size: 0.75rem;
+      font-size: 0.725rem;
       color: ${mutedColor};
       margin-top: 2px;
     }
 
     /* Section padding */
     section {
-      padding: 80px 0;
+      padding: ${sectionPad};
       border-bottom: 1px solid ${borderColor};
     }
 
     /* Projects */
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 32px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
     }
     .project-card {
       background: ${cardBg};
@@ -489,35 +508,37 @@ export function generateStandaloneHtml(data: PortfolioData): string {
     <div class="container">
       <div class="hero-split">
         <div>
-          ${personal.statusAvailable ? `
           <div class="status-badge">
+            ${personal.statusAvailable ? `
             <span class="status-dot"></span>
-            <span>${escapeHtml(personal.statusText)}</span>
-          </div>` : ''}
-          <h1 class="hero-title">${escapeHtml(personal.name)}</h1>
-          <p class="hero-tagline">${escapeHtml(personal.headline)}</p>
-          <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
-            <a href="#projects" class="btn-primary">Explore Works</a>
-            ${personal.resumeUrl ? `<a href="${escapeHtml(personal.resumeUrl)}" class="btn-outline">View Resume</a>` : ''}
+            <span>${escapeHtml(personal.statusText)}</span>` : ''}
+            ${personal.roleTitle ? `<span style="opacity: 0.5;">·</span> <span style="font-weight: 600; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.05em; color: ${textColor};">${escapeHtml(personal.roleTitle)}</span>` : ''}
+          </div>
+          <h1 class="hero-title">${escapeHtml(personal.headline || personal.name)}</h1>
+          ${personal.bioShort ? `<p class="hero-bio">${escapeHtml(personal.bioShort)}</p>` : ''}
+          <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 24px;">
+            <a href="#projects" class="btn-primary">Explore Works →</a>
+            ${personal.resumeUrl ? `<a href="${escapeHtml(personal.resumeUrl)}" class="btn-outline">Resume / CV</a>` : ''}
           </div>
           <div class="social-row">
-            ${socials.github ? `<a href="${escapeHtml(socials.github)}" target="_blank" rel="noreferrer" class="social-link">GitHub</a>` : ''}
-            ${socials.linkedin ? `<a href="${escapeHtml(socials.linkedin)}" target="_blank" rel="noreferrer" class="social-link">LinkedIn</a>` : ''}
-            ${socials.twitter ? `<a href="${escapeHtml(socials.twitter)}" target="_blank" rel="noreferrer" class="social-link">Twitter</a>` : ''}
+            ${personal.location ? `<span style="color: ${mutedColor}; font-size: 0.85rem; font-weight: 500;">📍 ${escapeHtml(personal.location)}</span><span style="color: ${borderColor};">·</span>` : ''}
+            ${socials.github ? `<a href="${escapeHtml(socials.github)}" target="_blank" rel="noreferrer" class="social-link">GitHub</a><span style="color: ${borderColor};">·</span>` : ''}
+            ${socials.linkedin ? `<a href="${escapeHtml(socials.linkedin)}" target="_blank" rel="noreferrer" class="social-link">LinkedIn</a><span style="color: ${borderColor};">·</span>` : ''}
+            ${socials.twitter ? `<a href="${escapeHtml(socials.twitter)}" target="_blank" rel="noreferrer" class="social-link">Twitter</a><span style="color: ${borderColor};">·</span>` : ''}
             ${socials.dribbble ? `<a href="${escapeHtml(socials.dribbble)}" target="_blank" rel="noreferrer" class="social-link">Dribbble</a>` : ''}
-            ${personal.location ? `<span style="color: ${mutedColor}; font-size: 0.875rem;">· ${escapeHtml(personal.location)}</span>` : ''}
           </div>
         </div>
-        ${personal.avatarUrl ? `
-        <div>
-          <img
-            src="${escapeHtml(resolveExportImageUrl(personal.avatarUrl, FALLBACK_AVATAR))}"
-            alt="${escapeHtml(personal.name)}"
-            class="hero-avatar"
-            loading="lazy"
-            onerror="this.onerror=null; this.src='${FALLBACK_AVATAR}';"
-          />
-        </div>` : ''}
+        <div class="hero-avatar-container">
+          <div class="hero-avatar-wrapper">
+            <img
+              src="${escapeHtml(resolveExportImageUrl(personal.avatarUrl, FALLBACK_AVATAR))}"
+              alt="${escapeHtml(personal.name)}"
+              class="hero-avatar"
+              loading="lazy"
+              onerror="this.onerror=null; this.src='${FALLBACK_AVATAR}';"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </section>` : ''}

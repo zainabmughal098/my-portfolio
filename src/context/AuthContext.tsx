@@ -1,16 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import {
-  User,
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
-  confirmPasswordReset,
-  signOut,
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db, googleAuthProvider } from '../lib/firebase.ts';
+import { supabase } from '../lib/supabase.ts';
 import { PortfolioData } from '../types/portfolio.ts';
 
 export interface ResumeListItem {
@@ -36,8 +25,8 @@ interface StoredResumeItem {
   updatedAt: string;
 }
 
-const LOCAL_RESUMES_KEY = 'foliocraft_multi_resumes_store_v1';
-const GUEST_SESSION_KEY = 'foliocraft_guest_session_v1';
+const LOCAL_RESUMES_KEY = 'foliocraft_multi_resumes_v2';
+const GUEST_SESSION_KEY = 'foliocraft_guest_session_v2';
 
 function getLocalStoredResumes(userId?: string): StoredResumeItem[] {
   try {
@@ -64,8 +53,10 @@ function saveLocalStoredResumes(items: StoredResumeItem[], userId?: string) {
 }
 
 interface AuthContextType {
-  user: User | AppUser | null;
+  user: AppUser | null;
   loading: boolean;
+  isPasswordRecovery: boolean;
+  setIsPasswordRecovery: (val: boolean) => void;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
@@ -95,65 +86,50 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | AppUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState<boolean>(() => {
+    try {
+      return (
+        window.location.hash.includes('type=recovery') ||
+        window.location.href.includes('type=recovery') ||
+        window.location.search.includes('type=recovery')
+      );
+    } catch {
+      return false;
+    }
+  });
   const [cloudSyncState, setCloudSyncState] = useState<'idle' | 'syncing' | 'saved' | 'error'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [resumesList, setResumesList] = useState<ResumeListItem[]>([]);
   const [activeResumeId, setActiveResumeId] = useState<number | null>(null);
   const [activeResumeTitle, setActiveResumeTitle] = useState<string>('My Portfolio Resume');
 
-  const userRef = useRef<User | AppUser | null>(user);
+  const userRef = useRef<AppUser | null>(user);
   useEffect(() => {
     userRef.current = user;
   }, [user]);
 
-  // Synchronize user profile with backend on login
-  const syncUserToBackend = useCallback(async (currentUser: User | AppUser) => {
-    if (currentUser.isAnonymous) return;
-    try {
-      if ('getIdToken' in currentUser && typeof currentUser.getIdToken === 'function') {
-        const token = await currentUser.getIdToken();
-        await fetch('/api/auth/sync', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: currentUser.displayName,
-            email: currentUser.email,
-            picture: currentUser.photoURL,
-          }),
-        });
-      }
-    } catch {
-      // Backend may be offline or static host (Vercel)
-    }
-  }, []);
-
   const getIdToken = useCallback(async (): Promise<string | null> => {
-    if (auth.currentUser) {
-      try {
-        return await auth.currentUser.getIdToken();
-      } catch {
-        return null;
-      }
+    try {
+      const { data } = await supabase.auth.getSession();
+      return data.session?.access_token || null;
+    } catch {
+      return null;
     }
-    return null;
   }, []);
 
   const fetchResumesList = useCallback(
-    async (retries = 1, overrideUser?: User | AppUser | null): Promise<ResumeListItem[]> => {
+    async (_retries = 1, overrideUser?: AppUser | null): Promise<ResumeListItem[]> => {
       const activeUser = overrideUser !== undefined ? overrideUser : userRef.current;
-      // If running in guest mode or on static host without backend
       if (!activeUser) {
         setResumesList([]);
         return [];
       }
 
-      if (activeUser.isAnonymous || !auth.currentUser) {
-        const local = getLocalStoredResumes();
+      // If guest user
+      if (activeUser.isAnonymous) {
+        const local = getLocalStoredResumes(activeUser.uid);
         const list = local.map((r) => ({
           id: r.id,
           title: r.title,
@@ -165,82 +141,109 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const token = await getIdToken();
-        if (!token) throw new Error('No token');
-        const res = await fetch('/api/resumes', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (res.ok) {
-          const json = await res.json();
-          const list = json.resumes || [];
-          setResumesList(list);
-          return list;
-        } else if (res.status === 404) {
-          // Backend not mounted (e.g., Vercel static deployment)
-          const local = getLocalStoredResumes();
-          const list = local.map((r) => ({
-            id: r.id,
-            title: r.title,
-            createdAt: r.createdAt,
-            updatedAt: r.updatedAt,
+        // Query Supabase table
+        const { data: dbResumes, error } = await supabase
+          .from('resumes')
+          .select('id, title, created_at, updated_at')
+          .order('updated_at', { ascending: false });
+
+        if (!error && Array.isArray(dbResumes) && dbResumes.length > 0) {
+          const list: ResumeListItem[] = dbResumes.map((r: any) => ({
+            id: Number(r.id),
+            title: r.title || 'Untitled Resume',
+            createdAt: r.created_at || new Date().toISOString(),
+            updatedAt: r.updated_at || new Date().toISOString(),
           }));
           setResumesList(list);
           return list;
         }
-      } catch {
-        if (retries > 0) {
-          await new Promise((r) => setTimeout(r, 800));
-          return fetchResumesList(retries - 1, activeUser);
-        }
-        // Fallback to local storage
-        const local = getLocalStoredResumes();
-        const list = local.map((r) => ({
-          id: r.id,
-          title: r.title,
-          createdAt: r.createdAt,
-          updatedAt: r.updatedAt,
-        }));
-        setResumesList(list);
-        return list;
+      } catch (e) {
+        console.warn('Supabase fetch resumes notice, using local cache:', e);
       }
-      return [];
+
+      // Fallback to local storage
+      const local = getLocalStoredResumes(activeUser.uid);
+      const list = local.map((r) => ({
+        id: r.id,
+        title: r.title,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      }));
+      setResumesList(list);
+      return list;
     },
-    [getIdToken]
+    []
   );
 
+  // Initialize Auth & listen to Supabase Auth State
   useEffect(() => {
-    // Check if there was an active guest session
+    // Check if URL hash or search contains recovery tokens
     try {
-      const savedGuest = localStorage.getItem(GUEST_SESSION_KEY);
-      if (savedGuest) {
-        const parsedGuest = JSON.parse(savedGuest);
-        setUser(parsedGuest);
-        userRef.current = parsedGuest;
-        fetchResumesList(1, parsedGuest);
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+        setIsPasswordRecovery(true);
       }
     } catch {
       // Ignore
-    } finally {
-      setLoading(false);
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        // Clear guest session if logged in with real account
+    // 1. Initial check for existing Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const suUser = session.user;
+        const appUser: AppUser = {
+          uid: suUser.id,
+          email: suUser.email || null,
+          displayName: suUser.user_metadata?.full_name || suUser.email?.split('@')[0] || 'User',
+          photoURL: suUser.user_metadata?.avatar_url || null,
+          isAnonymous: false,
+        };
+        setUser(appUser);
+        userRef.current = appUser;
+        fetchResumesList(1, appUser);
+      } else {
+        // Check for guest session in localStorage
+        try {
+          const savedGuest = localStorage.getItem(GUEST_SESSION_KEY);
+          if (savedGuest) {
+            const parsedGuest = JSON.parse(savedGuest);
+            setUser(parsedGuest);
+            userRef.current = parsedGuest;
+            fetchResumesList(1, parsedGuest);
+          }
+        } catch {
+          // Ignore
+        }
+      }
+      setLoading(false);
+    });
+
+    // 2. Listen to state changes (Sign in, Sign out, Token Refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+      }
+      if (session?.user) {
         try {
           localStorage.removeItem(GUEST_SESSION_KEY);
         } catch {
           // Ignore
         }
-        setUser(currentUser);
-        userRef.current = currentUser;
+        const suUser = session.user;
+        const appUser: AppUser = {
+          uid: suUser.id,
+          email: suUser.email || null,
+          displayName: suUser.user_metadata?.full_name || suUser.email?.split('@')[0] || 'User',
+          photoURL: suUser.user_metadata?.avatar_url || null,
+          isAnonymous: false,
+        };
+        setUser(appUser);
+        userRef.current = appUser;
         setLoading(false);
-        await syncUserToBackend(currentUser);
-        await fetchResumesList(1, currentUser);
+        fetchResumesList(1, appUser);
       } else {
-        // If no guest session either, set to null
+        // If guest session active, maintain it; otherwise null
         try {
           const savedGuest = localStorage.getItem(GUEST_SESSION_KEY);
           if (savedGuest) {
@@ -261,20 +264,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    return () => unsubscribe();
-  }, []); // Run subscription strictly once on mount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchResumesList]);
 
   const signInWithGoogle = async () => {
     try {
-      googleAuthProvider.setCustomParameters({
-        prompt: 'select_account',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        },
       });
-      await signInWithPopup(auth, googleAuthProvider);
+      if (error) throw error;
     } catch (error: any) {
-      if (error?.code !== 'auth/popup-closed-by-user') {
-        console.error('Sign in error:', error);
-        throw error;
-      }
+      console.error('Google Sign In error:', error);
+      throw error;
     }
   };
 
@@ -285,38 +291,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Password must be at least 6 characters.');
     }
 
-    try {
-      const cred = await signInWithEmailAndPassword(auth, cleanEmail, cleanPass);
-      setUser(cred.user);
-      return;
-    } catch (error: any) {
-      console.warn('Firebase sign-in notice, applying instant sign-in/reset:', error?.code);
-      
-      // Compute standard local user ID
-      const localUid = 'email-' + btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, '');
-      const storedPassKey = `foliocraft_pwd_${localUid}`;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password: cleanPass,
+    });
 
-      // Update password key to whatever the user entered now so they are never locked out
-      try {
-        localStorage.setItem(storedPassKey, cleanPass);
-      } catch {
-        // Ignore
+    if (error) {
+      // If user doesn't exist yet, offer helpful message or auto sign-up
+      if (error.message.includes('Invalid login credentials')) {
+        throw new Error('Invalid login credentials. Did you forget your password? Click "Forgot Password" below.');
       }
+      throw new Error(error.message);
+    }
 
+    if (data.user) {
       const appUser: AppUser = {
-        uid: localUid,
-        email: cleanEmail,
-        displayName: cleanEmail.split('@')[0],
-        photoURL: null,
+        uid: data.user.id,
+        email: data.user.email || cleanEmail,
+        displayName: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
+        photoURL: data.user.user_metadata?.avatar_url || null,
         isAnonymous: false,
       };
-
-      try {
-        localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify(appUser));
-      } catch {
-        // Ignore
-      }
-
       setUser(appUser);
       userRef.current = appUser;
       await fetchResumesList(1, appUser);
@@ -324,124 +319,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUpWithEmail = async (email: string, pass: string) => {
+    const cleanEmail = email.trim().toLowerCase();
     const cleanPass = pass.trim();
     if (!cleanPass || cleanPass.length < 6) {
       throw new Error('Password must be at least 6 characters.');
     }
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
-      setUser(cred.user);
-    } catch (error: any) {
-      if (
-        error?.code === 'auth/operation-not-allowed' ||
-        error?.code === 'auth/network-request-failed' ||
-        error?.code === 'auth/configuration-not-found'
-      ) {
-        const localUid = 'email-' + btoa(email.trim().toLowerCase()).replace(/[^a-zA-Z0-9]/g, '');
-        const storedPassKey = `foliocraft_pwd_${localUid}`;
-        localStorage.setItem(storedPassKey, pass);
-        const appUser: AppUser = {
-          uid: localUid,
-          email: email.trim(),
-          displayName: email.split('@')[0],
-          photoURL: null,
-          isAnonymous: false,
-        };
-        localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify(appUser));
-        setUser(appUser);
-        fetchResumesList();
-        return;
-      }
-      console.error('Email sign up error:', error);
-      throw error;
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password: cleanPass,
+      options: {
+        data: {
+          full_name: cleanEmail.split('@')[0],
+        },
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (data.user) {
+      const appUser: AppUser = {
+        uid: data.user.id,
+        email: data.user.email || cleanEmail,
+        displayName: cleanEmail.split('@')[0],
+        photoURL: null,
+        isAnonymous: false,
+      };
+      setUser(appUser);
+      userRef.current = appUser;
+      await fetchResumesList(1, appUser);
     }
   };
 
   const resetPassword = async (email: string) => {
-    try {
-      await sendPasswordResetEmail(auth, email.trim());
-    } catch (error: any) {
-      if (
-        error?.code === 'auth/operation-not-allowed' ||
-        error?.code === 'auth/network-request-failed' ||
-        error?.code === 'auth/configuration-not-found'
-      ) {
-        // Fallback for custom domains/offline
-        return;
-      }
-      console.error('Password reset error:', error);
-      throw error;
-    }
+    const cleanEmail = email.trim().toLowerCase();
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw new Error(error.message);
   };
 
+  // Triggers Supabase to send the password reset email to the user's inbox
   const requestPasswordResetCode = async (
     email: string
   ): Promise<{ expiresAt: number }> => {
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) throw new Error('Please enter a valid email.');
+    if (!cleanEmail) throw new Error('Please enter a valid email address.');
 
-    // 1. Dispatch official Firebase password reset email directly to the user's inbox
-    try {
-      await sendPasswordResetEmail(auth, cleanEmail);
-    } catch (err: any) {
-      console.warn('Firebase sendPasswordResetEmail notice:', err?.code, err?.message);
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: window.location.origin,
+    });
+    if (error) {
+      throw new Error(error.message || 'Could not send reset email.');
     }
 
-    // 2. Generate random short-lived 6-digit verification code
-    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes validity
-    const docId = cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
-
-    const resetPayload = {
-      email: cleanEmail,
-      code: generatedCode,
-      createdAt: new Date().toISOString(),
-      expiresAt,
-      used: false,
-    };
-
-    // Store securely without exposing the code to the frontend
-    try {
-      localStorage.setItem(`foliocraft_reset_code_${docId}`, JSON.stringify(resetPayload));
-    } catch {
-      // Ignore
-    }
-
-    try {
-      const firestoreTask = setDoc(doc(db, 'password_reset_codes', docId), resetPayload);
-      const timeoutTask = new Promise((resolve) => setTimeout(resolve, 500));
-      await Promise.race([firestoreTask, timeoutTask]);
-    } catch (e) {
-      console.warn('Firestore setDoc notice, using client storage:', e);
-    }
-
-    return { expiresAt };
+    return { expiresAt: Date.now() + 15 * 60 * 1000 };
   };
 
-  const confirmPasswordResetWithCode = async (
-    codeOrUrl: string,
-    newPassword: string
-  ): Promise<void> => {
-    let cleanCode = codeOrUrl.trim();
-    if (!cleanCode) throw new Error('Please enter the code or link from your email.');
-    if (!newPassword) {
-      throw new Error('Please enter your new password.');
-    }
-
-    if (cleanCode.includes('oobCode=')) {
-      try {
-        const parsed = new URL(cleanCode);
-        const extracted = parsed.searchParams.get('oobCode');
-        if (extracted) cleanCode = extracted;
-      } catch {
-        const match = cleanCode.match(/oobCode=([^&]+)/);
-        if (match && match[1]) cleanCode = match[1];
-      }
-    }
-
-    await confirmPasswordReset(auth, cleanCode, newPassword);
-  };
-
+  // Verifies the code or token from email and updates the password
   const verifyPasswordResetCode = async (
     email: string,
     code: string,
@@ -449,111 +386,160 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<boolean> => {
     const cleanEmail = email.trim().toLowerCase();
     let cleanCode = code.trim();
-    if (!cleanEmail) throw new Error('Invalid email address.');
-    if (!cleanCode) {
-      throw new Error('Please enter the verification code or email link.');
-    }
-    if (!newPassword) {
-      throw new Error('Please enter your new password.');
+    const isFullUrl = cleanCode.startsWith('http://') || cleanCode.startsWith('https://');
+    let fullUrl = isFullUrl ? cleanCode : '';
+
+    if (!cleanCode && !isFullUrl) throw new Error('Please enter the verification code or email link.');
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('Password must be at least 6 characters.');
     }
 
-    // If user pasted full Firebase email reset URL or Firebase oobCode
-    if (cleanCode.includes('oobCode=') || cleanCode.length > 10) {
+    // Extract token if user pasted full email link
+    if (cleanCode.includes('token=') || cleanCode.includes('token_hash=')) {
       try {
-        if (cleanCode.includes('oobCode=')) {
-          const match = cleanCode.match(/oobCode=([^&]+)/);
-          if (match && match[1]) cleanCode = match[1];
+        const url = new URL(cleanCode);
+        const extracted = url.searchParams.get('token_hash') || url.searchParams.get('token');
+        if (extracted) cleanCode = extracted;
+      } catch {
+        const match = cleanCode.match(/(?:token_hash|token)=([^&#]+)/);
+        if (match && match[1]) cleanCode = match[1];
+      }
+    }
+
+    let verifiedUser: any = null;
+
+    // 1. Try token_hash verification with Supabase (used when link token or pkce_ is pasted)
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: cleanCode,
+        type: 'recovery',
+      } as any);
+      if (!error && data?.user) {
+        verifiedUser = data.user;
+      }
+    } catch (e) {
+      console.warn('token_hash recovery attempt:', e);
+    }
+
+    // 2. Try email + token (used when 6-digit numeric OTP is entered)
+    if (!verifiedUser && cleanEmail) {
+      try {
+        const { data, error } = await supabase.auth.verifyOtp({
+          email: cleanEmail,
+          token: cleanCode,
+          type: 'recovery',
+        });
+        if (!error && data?.user) {
+          verifiedUser = data.user;
         }
-        await confirmPasswordReset(auth, cleanCode, newPassword);
+      } catch (e) {
+        console.warn('email token verify attempt:', e);
+      }
+    }
+
+    // 3. Try token_hash with 'email' type
+    if (!verifiedUser) {
+      try {
+        const { data, error } = await supabase.auth.verifyOtp({
+          token_hash: cleanCode,
+          type: 'email',
+        } as any);
+        if (!error && data?.user) {
+          verifiedUser = data.user;
+        }
+      } catch (e) {
+        // Ignore
+      }
+    }
+
+    // 4. If full URL was pasted, try exchanging it
+    if (!verifiedUser && isFullUrl && fullUrl) {
+      try {
+        await fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
+        const session = (await supabase.auth.getSession()).data.session;
+        if (session?.user) {
+          verifiedUser = session.user;
+        }
+      } catch (e) {
+        // Ignore
+      }
+    }
+
+    // 5. Check if current session is active from clicking the recovery link in email
+    if (!verifiedUser) {
+      const session = (await supabase.auth.getSession()).data.session;
+      if (session?.user) {
+        verifiedUser = session.user;
+      }
+    }
+
+    // 6. If OTP token failed/expired, try signing in with the provided password or creating account
+    if (!verifiedUser && cleanEmail && newPassword) {
+      try {
+        const { data: signData, error: signErr } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: newPassword,
+        });
+        if (!signErr && signData?.user) {
+          verifiedUser = signData.user;
+        }
+      } catch (e) {
+        // Try sign up if user did not exist
         try {
-          await signInWithEmailAndPassword(auth, cleanEmail, newPassword);
+          const { data: regData, error: regErr } = await supabase.auth.signUp({
+            email: cleanEmail,
+            password: newPassword,
+            options: {
+              data: { full_name: cleanEmail.split('@')[0] },
+            },
+          });
+          if (!regErr && regData?.user) {
+            verifiedUser = regData.user;
+          }
         } catch {
           // Ignore
         }
-        return true;
-      } catch (err: any) {
-        console.warn('Firebase confirmPasswordReset error:', err);
-        throw new Error(err?.message || 'Invalid or expired code from email. Please request a new code.');
       }
     }
 
-    const docId = cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
-    let resetDocData: any = null;
+    if (!verifiedUser) {
+      throw new Error('This reset link has expired. You can sign in directly or enter workspace below!');
+    }
 
-    // Check local storage first
+    // 7. Update user password in Supabase if session exists
     try {
-      const raw = localStorage.getItem(`foliocraft_reset_code_${docId}`);
-      if (raw) resetDocData = JSON.parse(raw);
-    } catch {
-      // Ignore
-    }
-
-    // If not in local storage, check Firestore
-    if (!resetDocData) {
-      try {
-        const firestoreFetch = getDoc(doc(db, 'password_reset_codes', docId));
-        const timeoutTask = new Promise<null>((resolve) => setTimeout(() => resolve(null), 600));
-        const snap = await Promise.race([firestoreFetch, timeoutTask]);
-        if (snap && (snap as any).exists && (snap as any).exists()) {
-          resetDocData = (snap as any).data();
-        }
-      } catch (e) {
-        console.warn('Firestore getDoc notice:', e);
-      }
-    }
-
-    if (!resetDocData) {
-      throw new Error('No active verification code found for this email. Please request a new code.');
-    }
-
-    if (resetDocData.used) {
-      throw new Error('This verification code has already been used. Please request a new code.');
-    }
-
-    if (Date.now() > resetDocData.expiresAt) {
-      throw new Error('This verification code has expired. Please request a new one.');
-    }
-
-    if (resetDocData.code !== cleanCode) {
-      throw new Error('Incorrect code. Please enter the code sent to your email.');
-    }
-
-    // Mark as used in local storage immediately
-    try {
-      resetDocData.used = true;
-      localStorage.setItem(`foliocraft_reset_code_${docId}`, JSON.stringify(resetDocData));
-    } catch {
-      // Ignore
-    }
-
-    // Mark as used in Firestore in background without blocking
-    updateDoc(doc(db, 'password_reset_codes', docId), { used: true }).catch(() => {});
-
-    // Update user password credential
-    const localUid = 'email-' + btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, '');
-    const storedPassKey = `foliocraft_pwd_${localUid}`;
-    try {
-      localStorage.setItem(storedPassKey, newPassword);
+      await supabase.auth.updateUser({
+        password: newPassword,
+      });
     } catch (e) {
-      console.warn('LocalStorage error:', e);
+      // User may already have updated password during sign in
     }
 
-    // Log the user in automatically
+    setIsPasswordRecovery(false);
+
+    // Automatically set user session
     const appUser: AppUser = {
-      uid: localUid,
-      email: cleanEmail,
-      displayName: cleanEmail.split('@')[0],
-      photoURL: null,
+      uid: verifiedUser.id,
+      email: verifiedUser.email || cleanEmail,
+      displayName: verifiedUser.user_metadata?.full_name || cleanEmail.split('@')[0],
+      photoURL: verifiedUser.user_metadata?.avatar_url || null,
       isAnonymous: false,
     };
-    try {
-      localStorage.setItem(GUEST_SESSION_KEY, JSON.stringify(appUser));
-    } catch {
-      // Ignore
-    }
     setUser(appUser);
-    await fetchResumesList();
+    userRef.current = appUser;
+    await fetchResumesList(1, appUser);
+
     return true;
+  };
+
+  const confirmPasswordResetWithCode = async (
+    codeOrUrl: string,
+    newPassword: string
+  ): Promise<void> => {
+    const cleanCode = codeOrUrl.trim();
+    if (!cleanCode) throw new Error('Please enter the reset code.');
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw new Error(error.message);
   };
 
   const continueAsGuest = () => {
@@ -576,7 +562,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOutUser = async () => {
     try {
-      await signOut(auth);
+      await supabase.auth.signOut();
     } catch {
       // Ignore
     }
@@ -598,9 +584,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ id: number; title: string; data: PortfolioData } | null> => {
     if (!user) return null;
 
-    // Check local storage first if guest or static host
-    if (user.isAnonymous || !auth.currentUser) {
-      const local = getLocalStoredResumes();
+    // Check local storage first
+    if (user.isAnonymous) {
+      const local = getLocalStoredResumes(user.uid);
       const match = local.find((r) => r.id === id);
       if (match) {
         setActiveResumeId(match.id);
@@ -612,36 +598,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const token = await getIdToken();
-      if (!token) throw new Error('No token');
+      const { data: dbResume, error } = await supabase
+        .from('resumes')
+        .select('id, title, data, updated_at')
+        .eq('id', id)
+        .single();
 
-      const res = await fetch(`/api/resumes/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        const payload = await res.json();
-        if (payload && payload.data) {
-          const parsed = typeof payload.data === 'string' ? JSON.parse(payload.data) : payload.data;
-          setActiveResumeId(payload.id);
-          setActiveResumeTitle(payload.title || 'Untitled Resume');
-          if (payload.updatedAt) {
-            setLastSavedAt(new Date(payload.updatedAt));
-          }
-          return {
-            id: payload.id,
-            title: payload.title,
-            data: parsed,
-          };
+      if (!error && dbResume) {
+        const parsed = typeof dbResume.data === 'string' ? JSON.parse(dbResume.data) : dbResume.data;
+        setActiveResumeId(Number(dbResume.id));
+        setActiveResumeTitle(dbResume.title || 'Untitled Resume');
+        if (dbResume.updated_at) {
+          setLastSavedAt(new Date(dbResume.updated_at));
         }
+        return {
+          id: Number(dbResume.id),
+          title: dbResume.title,
+          data: parsed,
+        };
       }
-    } catch {
-      // Fallback to local
+    } catch (e) {
+      console.warn('Supabase loadResumeById notice:', e);
     }
 
-    const local = getLocalStoredResumes();
+    // Local fallback
+    const local = getLocalStoredResumes(user.uid);
     const match = local.find((r) => r.id === id);
     if (match) {
       setActiveResumeId(match.id);
@@ -658,18 +639,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ id: number; title: string } | null> => {
     if (!user) return null;
     const trimmedTitle = title.trim() || 'New Resume';
+    const nowIso = new Date().toISOString();
 
-    if (user.isAnonymous || !auth.currentUser) {
+    // If guest, store locally
+    if (user.isAnonymous) {
       const newId = Date.now();
       const newItem: StoredResumeItem = {
         id: newId,
         title: trimmedTitle,
         data,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: nowIso,
+        updatedAt: nowIso,
       };
-      const current = getLocalStoredResumes();
-      saveLocalStoredResumes([newItem, ...current]);
+      const current = getLocalStoredResumes(user.uid);
+      saveLocalStoredResumes([newItem, ...current], user.uid);
       setActiveResumeId(newId);
       setActiveResumeTitle(trimmedTitle);
       await fetchResumesList();
@@ -677,118 +660,96 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const token = await getIdToken();
-      if (!token) throw new Error('Not authenticated');
-
-      const res = await fetch('/api/resumes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const { data: inserted, error } = await supabase
+        .from('resumes')
+        .insert({
+          user_id: user.uid,
           title: trimmedTitle,
-          data,
-        }),
-      });
+          data: data,
+          created_at: nowIso,
+          updated_at: nowIso,
+        })
+        .select('id, title')
+        .single();
 
-      if (res.ok) {
-        const json = await res.json();
-        const newResume = json.resume;
-        setActiveResumeId(newResume.id);
-        setActiveResumeTitle(newResume.title);
+      if (!error && inserted) {
+        const newId = Number(inserted.id);
+        setActiveResumeId(newId);
+        setActiveResumeTitle(inserted.title || trimmedTitle);
         await fetchResumesList();
-        return { id: newResume.id, title: newResume.title };
+        return { id: newId, title: inserted.title || trimmedTitle };
       }
-    } catch {
-      // Fallback to local
+    } catch (e) {
+      console.warn('Supabase createResume notice, using local backup:', e);
     }
 
-    // Safe 32-bit positive integer ID for local storage
-    const newId = (Date.now() % 100000000) + 1;
+    // Fallback to local
+    const fallbackId = (Date.now() % 100000000) + 1;
     const newItem: StoredResumeItem = {
-      id: newId,
+      id: fallbackId,
       title: trimmedTitle,
       data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: nowIso,
+      updatedAt: nowIso,
     };
-    const current = getLocalStoredResumes();
-    saveLocalStoredResumes([newItem, ...current]);
-    setActiveResumeId(newId);
+    const current = getLocalStoredResumes(user.uid);
+    saveLocalStoredResumes([newItem, ...current], user.uid);
+    setActiveResumeId(fallbackId);
     setActiveResumeTitle(trimmedTitle);
     await fetchResumesList();
-    return { id: newId, title: trimmedTitle };
+    return { id: fallbackId, title: trimmedTitle };
   };
 
   const renameResumeInCloud = async (id: number, newTitle: string): Promise<boolean> => {
     if (!user) return false;
     const cleanTitle = newTitle.trim();
+    const nowIso = new Date().toISOString();
 
-    // Update in local store
-    const local = getLocalStoredResumes();
-    const updatedLocal = local.map((r) => (r.id === id ? { ...r, title: cleanTitle, updatedAt: new Date().toISOString() } : r));
-    saveLocalStoredResumes(updatedLocal);
+    // Local update
+    const local = getLocalStoredResumes(user.uid);
+    const updatedLocal = local.map((r) =>
+      r.id === id ? { ...r, title: cleanTitle, updatedAt: nowIso } : r
+    );
+    saveLocalStoredResumes(updatedLocal, user.uid);
 
     if (activeResumeId === id) {
       setActiveResumeTitle(cleanTitle);
     }
 
-    if (user.isAnonymous || !auth.currentUser) {
-      await fetchResumesList();
-      return true;
+    if (!user.isAnonymous) {
+      try {
+        await supabase
+          .from('resumes')
+          .update({ title: cleanTitle, updated_at: nowIso })
+          .eq('id', id);
+      } catch (e) {
+        console.warn('Supabase rename notice:', e);
+      }
     }
 
-    try {
-      const token = await getIdToken();
-      if (!token) return true;
-
-      await fetch(`/api/resumes/${id}/rename`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title: cleanTitle }),
-      });
-      await fetchResumesList();
-      return true;
-    } catch {
-      await fetchResumesList();
-      return true;
-    }
+    await fetchResumesList();
+    return true;
   };
 
   const deleteResumeFromCloud = async (id: number): Promise<boolean> => {
     if (!user) return false;
 
-    // Optimistically remove from state and local storage immediately
+    // Optimistically remove from state & local storage
     setResumesList((prev) => prev.filter((r) => r.id !== id));
-    const local = getLocalStoredResumes().filter((r) => r.id !== id);
-    saveLocalStoredResumes(local);
+    const local = getLocalStoredResumes(user.uid).filter((r) => r.id !== id);
+    saveLocalStoredResumes(local, user.uid);
 
     if (activeResumeId === id) {
       setActiveResumeId(null);
       setActiveResumeTitle('My Portfolio Resume');
     }
 
-    if (user.isAnonymous || !auth.currentUser) {
-      await fetchResumesList();
-      return true;
-    }
-
-    try {
-      const token = await getIdToken();
-      if (token) {
-        await fetch(`/api/resumes/${id}`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    if (!user.isAnonymous) {
+      try {
+        await supabase.from('resumes').delete().eq('id', id);
+      } catch (e) {
+        console.warn('Supabase delete notice:', e);
       }
-    } catch {
-      // Local is already purged
     }
 
     await fetchResumesList();
@@ -814,19 +775,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? `${data.personal.name}'s Resume`
           : 'My Portfolio Resume');
 
-      // Always backup to local storage first for instant safety
-      const local = getLocalStoredResumes();
       const nowIso = new Date().toISOString();
+
+      // Backup to local storage immediately
+      const local = getLocalStoredResumes(user.uid);
       if (resumeIdToUse && local.some((r) => r.id === resumeIdToUse)) {
         const updated = local.map((r) =>
           r.id === resumeIdToUse ? { ...r, title: titleToUse, data, updatedAt: nowIso } : r
         );
-        saveLocalStoredResumes(updated);
+        saveLocalStoredResumes(updated, user.uid);
       } else {
         const safeResumeId =
-          resumeIdToUse && resumeIdToUse > 0 && resumeIdToUse <= 2147483647
-            ? resumeIdToUse
-            : (Date.now() % 100000000) + 1;
+          resumeIdToUse && resumeIdToUse > 0 ? resumeIdToUse : (Date.now() % 100000000) + 1;
         const itemToSave: StoredResumeItem = {
           id: safeResumeId,
           title: titleToUse,
@@ -834,59 +794,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: nowIso,
           updatedAt: nowIso,
         };
-        saveLocalStoredResumes([itemToSave, ...local.filter((r) => r.id !== itemToSave.id)]);
+        saveLocalStoredResumes([itemToSave, ...local.filter((r) => r.id !== itemToSave.id)], user.uid);
       }
 
-      // If anonymous or no auth token, local save is sufficient
-      if (user.isAnonymous || !auth.currentUser) {
-        setLastSavedAt(new Date());
-        setCloudSyncState('saved');
-        return true;
-      }
+      // If user is logged in, sync with Supabase
+      if (!user.isAnonymous) {
+        try {
+          if (resumeIdToUse) {
+            await supabase
+              .from('resumes')
+              .update({
+                title: titleToUse,
+                data: data,
+                updated_at: nowIso,
+              })
+              .eq('id', resumeIdToUse);
+          } else {
+            const { data: inserted } = await supabase
+              .from('resumes')
+              .insert({
+                user_id: user.uid,
+                title: titleToUse,
+                data: data,
+                created_at: nowIso,
+                updated_at: nowIso,
+              })
+              .select('id, title')
+              .single();
 
-      const token = await getIdToken();
-      if (!token) {
-        setLastSavedAt(new Date());
-        setCloudSyncState('saved');
-        return true;
-      }
-
-      const endpoint = resumeIdToUse ? `/api/resumes/${resumeIdToUse}` : '/api/resume';
-      const method = resumeIdToUse ? 'PUT' : 'POST';
-
-      const res = await fetch(endpoint, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: titleToUse,
-          data,
-          resumeId: resumeIdToUse,
-        }),
-      });
-
-      if (res.ok) {
-        const json = await res.json();
-        const savedResume = json.resume;
-        if (savedResume) {
-          if (!activeResumeId && savedResume.id) {
-            setActiveResumeId(savedResume.id);
+            if (inserted?.id) {
+              setActiveResumeId(Number(inserted.id));
+              if (inserted.title) setActiveResumeTitle(inserted.title);
+            }
           }
-          if (savedResume.title) {
-            setActiveResumeTitle(savedResume.title);
-          }
+        } catch (e) {
+          console.warn('Supabase cloud sync notice, local backup safe:', e);
         }
-        setLastSavedAt(new Date());
-        setCloudSyncState('saved');
-        return true;
-      } else {
-        // Fallback saved locally
-        setLastSavedAt(new Date());
-        setCloudSyncState('saved');
-        return true;
       }
+
+      setLastSavedAt(new Date());
+      setCloudSyncState('saved');
+      return true;
     } catch {
       setLastSavedAt(new Date());
       setCloudSyncState('saved');
@@ -897,56 +845,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadResumeFromCloud = async (): Promise<PortfolioData | null> => {
     if (!user) return null;
 
-    if (user.isAnonymous || !auth.currentUser) {
-      const local = getLocalStoredResumes();
-      if (local.length > 0) {
-        setActiveResumeId(local[0].id);
-        setActiveResumeTitle(local[0].title || 'My Portfolio Resume');
-        if (local[0].updatedAt) {
-          setLastSavedAt(new Date(local[0].updatedAt));
-        }
-        return local[0].data;
-      }
-      return null;
-    }
+    if (!user.isAnonymous) {
+      try {
+        const { data: dbResumes, error } = await supabase
+          .from('resumes')
+          .select('id, title, data, updated_at')
+          .order('updated_at', { ascending: false })
+          .limit(1);
 
-    try {
-      const token = await getIdToken();
-      if (!token) return null;
-
-      const res = await fetch('/api/resume', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        const payload = await res.json();
-        if (payload && payload.data) {
-          const parsed = typeof payload.data === 'string' ? JSON.parse(payload.data) : payload.data;
-          if (payload.id) {
-            setActiveResumeId(payload.id);
-          }
-          if (payload.title) {
-            setActiveResumeTitle(payload.title);
-          }
-          if (payload.updatedAt) {
-            setLastSavedAt(new Date(payload.updatedAt));
-          }
+        if (!error && dbResumes && dbResumes.length > 0) {
+          const item = dbResumes[0];
+          const parsed = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+          setActiveResumeId(Number(item.id));
+          setActiveResumeTitle(item.title || 'My Portfolio Resume');
+          if (item.updated_at) setLastSavedAt(new Date(item.updated_at));
           return parsed;
         }
+      } catch (e) {
+        console.warn('Supabase loadResumeFromCloud notice:', e);
       }
-    } catch {
-      // Local fallback
     }
 
-    const local = getLocalStoredResumes();
+    const local = getLocalStoredResumes(user.uid);
     if (local.length > 0) {
       setActiveResumeId(local[0].id);
       setActiveResumeTitle(local[0].title || 'My Portfolio Resume');
-      if (local[0].updatedAt) {
-        setLastSavedAt(new Date(local[0].updatedAt));
-      }
+      if (local[0].updatedAt) setLastSavedAt(new Date(local[0].updatedAt));
       return local[0].data;
     }
     return null;
@@ -957,6 +881,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         loading,
+        isPasswordRecovery,
+        setIsPasswordRecovery,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,

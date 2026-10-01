@@ -52,6 +52,74 @@ interface ResumeViewProps {
 
 const PAGE_HEIGHT_PX = 1040; // Printable height threshold at standard 96dpi for A4/Letter
 
+/**
+ * Mobile-specific responsive container helpers (< 640px)
+ * Ensures project grids, bio columns, and split metadata stack cleanly into a single
+ * vertical flow on screens smaller than 640px rather than compressing side-by-side.
+ */
+export interface ResponsiveProjectGridProps {
+  children: React.ReactNode;
+  className?: string;
+  cols?: 2 | 3;
+}
+
+export const ResponsiveProjectGrid: React.FC<ResponsiveProjectGridProps> = ({
+  children,
+  className = '',
+  cols = 2,
+}) => {
+  const colClass = cols === 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2';
+  return (
+    <div className={`grid ${colClass} gap-3 w-full ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+export interface ResponsiveBioColumnProps {
+  children: React.ReactNode;
+  className?: string;
+  align?: 'baseline' | 'center' | 'start';
+}
+
+export const ResponsiveBioColumn: React.FC<ResponsiveBioColumnProps> = ({
+  children,
+  className = '',
+  align = 'baseline',
+}) => {
+  const alignClass =
+    align === 'center'
+      ? 'sm:items-center'
+      : align === 'start'
+      ? 'sm:items-start'
+      : 'sm:items-baseline';
+
+  return (
+    <div
+      className={`flex flex-col sm:flex-row ${alignClass} justify-between gap-0.5 sm:gap-2 w-full ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
+
+export interface ResponsiveContainerProps {
+  children: React.ReactNode;
+  className?: string;
+  type?: 'grid' | 'bio' | 'column';
+}
+
+export const ResponsiveContainer: React.FC<ResponsiveContainerProps> = ({
+  children,
+  className = '',
+  type = 'bio',
+}) => {
+  if (type === 'grid') {
+    return <ResponsiveProjectGrid className={className}>{children}</ResponsiveProjectGrid>;
+  }
+  return <ResponsiveBioColumn className={className}>{children}</ResponsiveBioColumn>;
+};
+
 export const ResumeView: React.FC<ResumeViewProps> = ({
   data,
   onChangeData,
@@ -1039,7 +1107,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                 <div className={fontScaleClasses.itemGap}>
                   {experiences.map((exp) => (
                     <div key={exp.id} className="break-inside-avoid">
-                      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between">
+                      <ResponsiveBioColumn>
                         <div>
                           <span className={`font-bold text-slate-900 ${fontScaleClasses.subheading}`}>{exp.role}</span>
                           <span className={`text-slate-600 font-medium ${fontScaleClasses.meta}`}> — {exp.company}</span>
@@ -1047,7 +1115,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                         <span className={`font-semibold text-slate-600 font-mono ${fontScaleClasses.meta}`}>
                           {exp.period}
                         </span>
-                      </div>
+                      </ResponsiveBioColumn>
                       <p className={`text-slate-600 mt-0.5 ${fontScaleClasses.body}`}>{exp.summary}</p>
                       {exp.highlights && exp.highlights.length > 0 && (
                         <ul className={`mt-1 space-y-0.5 text-slate-700 list-disc pl-4 ${fontScaleClasses.body}`}>
@@ -1067,13 +1135,13 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                   <h2 className={`font-bold uppercase tracking-widest text-slate-500 mb-2 border-b border-slate-200 pb-0.5 ${fontScaleClasses.heading}`}>
                     Key Projects & Systems
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <ResponsiveProjectGrid>
                     {projects.slice(0, 4).map((p) => (
                       <div key={p.id} className="p-2.5 bg-slate-50 border border-slate-200 rounded break-inside-avoid">
-                        <div className="flex items-center justify-between">
+                        <ResponsiveBioColumn align="center">
                           <span className={`font-bold text-slate-900 ${fontScaleClasses.meta}`}>{p.title}</span>
                           <span className={`text-slate-500 ${fontScaleClasses.meta}`}>{p.year}</span>
-                        </div>
+                        </ResponsiveBioColumn>
                         <p className={`text-slate-600 mt-0.5 line-clamp-2 ${fontScaleClasses.meta}`}>{p.description}</p>
                         <div className="mt-1 flex items-center justify-between">
                           <span className="text-[10px] text-slate-500 font-mono">{p.tags.slice(0, 3).join(' · ')}</span>
@@ -1090,7 +1158,7 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                         </div>
                       </div>
                     ))}
-                  </div>
+                  </ResponsiveProjectGrid>
                 </div>
               )}
 
@@ -1213,13 +1281,13 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                 <div className={fontScaleClasses.itemGap}>
                   {experiences.map((exp) => (
                     <div key={exp.id} className="break-inside-avoid">
-                      <div className="flex justify-between items-baseline">
+                      <ResponsiveBioColumn>
                         <div>
                           <span className="font-bold text-slate-900 font-sans">{exp.role}</span>
                           <span className="text-slate-700"> @ {exp.company}</span>
                         </div>
-                        <span className="text-[11px] text-slate-600">{exp.period}</span>
-                      </div>
+                        <span className="text-[11px] text-slate-600 font-mono">{exp.period}</span>
+                      </ResponsiveBioColumn>
                       <p className={`text-slate-700 font-sans mt-0.5 ${fontScaleClasses.body}`}>{exp.summary}</p>
                       {exp.highlights && exp.highlights.length > 0 && (
                         <ul className={`mt-1 space-y-0.5 text-slate-800 list-disc pl-4 font-sans ${fontScaleClasses.body}`}>
@@ -1242,10 +1310,10 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                   <div className="space-y-2">
                     {projects.map((p) => (
                       <div key={p.id} className="break-inside-avoid">
-                        <div className="flex justify-between items-baseline">
+                        <ResponsiveBioColumn>
                           <span className="font-bold text-slate-900">{p.title}</span>
-                          <span className="text-[10px] text-slate-500">{p.year}</span>
-                        </div>
+                          <span className="text-[10px] text-slate-500 font-mono">{p.year}</span>
+                        </ResponsiveBioColumn>
                         <p className={`text-slate-700 font-sans ${fontScaleClasses.body}`}>{p.description}</p>
                         <div className="text-[10px] text-slate-500 mt-0.5">
                           Stack: {p.tags.join(', ')}
@@ -1274,12 +1342,14 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                   </div>
                   <div className="space-y-1 text-xs">
                     {education.map((edu) => (
-                      <div key={edu.id} className="flex justify-between">
-                        <div>
-                          <span className="font-bold">{edu.degree}</span>
-                          <span className="text-slate-700"> — {edu.institution}</span>
-                        </div>
-                        <span className="text-slate-500">{edu.period}</span>
+                      <div key={edu.id}>
+                        <ResponsiveBioColumn>
+                          <div>
+                            <span className="font-bold">{edu.degree}</span>
+                            <span className="text-slate-700"> — {edu.institution}</span>
+                          </div>
+                          <span className="text-slate-500 font-mono">{edu.period}</span>
+                        </ResponsiveBioColumn>
                       </div>
                     ))}
                   </div>
@@ -1357,13 +1427,13 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                 <div className={fontScaleClasses.itemGap}>
                   {experiences.map((exp) => (
                     <div key={exp.id} className="break-inside-avoid">
-                      <div className="flex justify-between items-baseline">
+                      <ResponsiveBioColumn>
                         <div>
                           <span className="font-bold text-slate-900">{exp.role}</span>
                           <span className="text-slate-600">, {exp.company}</span>
                         </div>
                         <span className="italic text-slate-500 text-xs font-serif-display">{exp.period}</span>
-                      </div>
+                      </ResponsiveBioColumn>
                       <p className={`text-slate-600 mt-0.5 ${fontScaleClasses.body}`}>{exp.summary}</p>
                       {exp.highlights && exp.highlights.length > 0 && (
                         <ul className={`mt-1 space-y-0.5 text-slate-700 list-disc pl-4 ${fontScaleClasses.body}`}>
@@ -1383,14 +1453,14 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                   <h2 className="font-serif-display italic font-bold text-base text-slate-800 border-b border-slate-200 pb-0.5 mb-2">
                     Selected Works
                   </h2>
-                  <div className="grid grid-cols-2 gap-3">
+                  <ResponsiveProjectGrid>
                     {projects.map((p) => (
-                      <div key={p.id} className="break-inside-avoid">
+                      <div key={p.id} className="p-2.5 bg-slate-50/70 border border-slate-200 rounded break-inside-avoid">
                         <span className="font-bold text-xs text-slate-900">{p.title}</span>
                         <p className="text-[11px] text-slate-600 mt-0.5">{p.description}</p>
                       </div>
                     ))}
-                  </div>
+                  </ResponsiveProjectGrid>
                 </div>
               )}
 
@@ -1402,8 +1472,8 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                   </h2>
                   <div className="space-y-1 text-xs">
                     {skills.map((s) => (
-                      <div key={s.id} className="flex">
-                        <span className="font-bold text-slate-800 w-36 shrink-0">{s.category}:</span>
+                      <div key={s.id} className="flex flex-col sm:flex-row sm:items-baseline">
+                        <span className="font-bold text-slate-800 w-full sm:w-36 shrink-0">{s.category}:</span>
                         <span className="text-slate-600">{s.items.join(', ')}</span>
                       </div>
                     ))}
@@ -1475,12 +1545,14 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                   </h2>
                   <div className="space-y-1 text-xs">
                     {education.map((edu) => (
-                      <div key={edu.id} className="flex justify-between items-baseline">
-                        <div>
-                          <span className="font-bold">{edu.institution}</span>
-                          <span className="italic"> — {edu.degree}</span>
-                        </div>
-                        <span className="font-semibold">{edu.period}</span>
+                      <div key={edu.id}>
+                        <ResponsiveBioColumn>
+                          <div>
+                            <span className="font-bold">{edu.institution}</span>
+                            <span className="italic"> — {edu.degree}</span>
+                          </div>
+                          <span className="font-semibold">{edu.period}</span>
+                        </ResponsiveBioColumn>
                       </div>
                     ))}
                   </div>
@@ -1495,13 +1567,13 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                 <div className={fontScaleClasses.itemGap}>
                   {experiences.map((exp) => (
                     <div key={exp.id} className="break-inside-avoid">
-                      <div className="flex justify-between items-baseline">
+                      <ResponsiveBioColumn>
                         <div>
                           <span className="font-bold">{exp.company}</span>
                           <span className="italic">, {exp.role}</span>
                         </div>
                         <span className="text-xs font-semibold">{exp.period}</span>
-                      </div>
+                      </ResponsiveBioColumn>
                       <p className={`text-slate-800 mt-0.5 ${fontScaleClasses.body}`}>{exp.summary}</p>
                       {exp.highlights && exp.highlights.length > 0 && (
                         <ul className={`mt-1 space-y-0.5 list-disc pl-5 ${fontScaleClasses.body}`}>
@@ -1524,10 +1596,10 @@ export const ResumeView: React.FC<ResumeViewProps> = ({
                   <div className="space-y-1.5">
                     {projects.map((p) => (
                       <div key={p.id} className="break-inside-avoid">
-                        <div className="flex justify-between">
+                        <ResponsiveBioColumn>
                           <span className="font-bold text-xs">{p.title}</span>
                           <span className="text-[11px]">{p.year}</span>
-                        </div>
+                        </ResponsiveBioColumn>
                         <p className={`text-slate-800 ${fontScaleClasses.body}`}>{p.description}</p>
                         {p.liveUrl && (
                           <a href={p.liveUrl} target="_blank" rel="noreferrer" className="text-[11px] underline">
