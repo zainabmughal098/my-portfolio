@@ -83,8 +83,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setErrorMsg(null);
       setInfoMsg(null);
       if (authMode === 'signup') {
-        await signUpWithEmail(email, password);
-        setInfoMsg(`Account created for ${email}! You can now sign in, or click "Open as Guest" to enter immediately.`);
+        const res = await signUpWithEmail(email, password);
+        if (res && res.requiresConfirmation) {
+          setInfoMsg(
+            `Account registered! Supabase sent a verification email to ${email}. Note: School/work domains or email filters often delay or block automated emails. You can click "Open as Guest" below to enter immediately!`
+          );
+          return;
+        } else {
+          setInfoMsg(`Account created and logged in! Entering workspace...`);
+        }
       } else {
         await signInWithEmail(email, password);
       }
@@ -121,7 +128,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setForgotStep('enter_code');
       setInfoMsg(`A reset email has been sent to ${cleanEmail}. Click the link inside the email or paste it below.`);
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Failed to send reset email. Please verify your email address.');
+      const msg = (err?.message || '').toLowerCase();
+      if (msg.includes('rate limit') || msg.includes('once every')) {
+        setErrorMsg('Supabase hourly email limit reached (max 3-4 emails/hour on free tier). You can click "Open as Guest" below to start immediately!');
+      } else {
+        setErrorMsg(err?.message || 'Failed to send reset email. Please verify your email address.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -153,35 +165,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (onClose) onClose();
       }, 1200);
     } catch (err: any) {
-      // Direct rescue: Try signing in or creating account with this password directly!
-      const targetEmail = (email.trim() || user?.email || '').toLowerCase();
-      let rescued = false;
-      if (targetEmail) {
-        try {
-          await signInWithEmail(targetEmail, newPassword);
-          rescued = true;
-        } catch {
-          try {
-            await signUpWithEmail(targetEmail, newPassword);
-            rescued = true;
-          } catch {
-            // Both failed
-          }
-        }
-      }
-
-      if (rescued) {
-        setSuccessReset(true);
-        setInfoMsg('Signed in successfully! Entering your workspace...');
-        if (setIsPasswordRecovery) setIsPasswordRecovery(false);
-        setTimeout(() => {
-          if (onSuccess) onSuccess();
-          if (onClose) onClose();
-        }, 1000);
-        return;
-      }
-
-      setErrorMsg(err?.message || 'Invalid or expired reset link. You can enter as Guest below.');
+      setErrorMsg(
+        err?.message ||
+        'Invalid or expired verification code. Password was not changed. Please check your email for the correct link or code.'
+      );
     } finally {
       setIsSubmitting(false);
     }

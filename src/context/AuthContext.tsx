@@ -74,7 +74,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithGithub: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
-  signUpWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string) => Promise<{ requiresConfirmation: boolean }>;
   resetPassword: (email: string) => Promise<void>;
   confirmPasswordResetWithCode: (codeOrUrl: string, newPassword: string) => Promise<void>;
   requestPasswordResetCode: (email: string) => Promise<{ expiresAt: number }>;
@@ -370,7 +370,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(error.message);
     }
 
-    if (data.user) {
+    if (data.session && data.user) {
       const appUser: AppUser = {
         uid: data.user.id,
         email: data.user.email || cleanEmail,
@@ -381,7 +381,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(appUser);
       userRef.current = appUser;
       await fetchResumesList(1, appUser);
+      return { requiresConfirmation: false };
     }
+
+    // If data.user exists but no session, Supabase is waiting for email confirmation
+    return { requiresConfirmation: true };
   };
 
   const resetPassword = async (email: string) => {
@@ -418,142 +422,100 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanEmail = email.trim().toLowerCase();
     let cleanCode = code.trim();
     const isFullUrl = cleanCode.startsWith('http://') || cleanCode.startsWith('https://');
-    let fullUrl = isFullUrl ? cleanCode : '';
 
-    if (!cleanCode && !isFullUrl) throw new Error('Please enter the verification code or email link.');
     if (!newPassword || newPassword.length < 6) {
-      throw new Error('Password must be at least 6 characters.');
+      throw new Error('New password must be at least 6 characters.');
     }
 
-    // Extract token if user pasted full email link
-    if (cleanCode.includes('token=') || cleanCode.includes('token_hash=')) {
-      try {
-        const url = new URL(cleanCode);
-        const extracted = url.searchParams.get('token_hash') || url.searchParams.get('token');
-        if (extracted) cleanCode = extracted;
-      } catch {
-        const match = cleanCode.match(/(?:token_hash|token)=([^&#]+)/);
-        if (match && match[1]) cleanCode = match[1];
+    // Check if user has an active authenticated recovery session from clicking email link
+    let sessionUser: any = null;
+    const sessionRes = await supabase.auth.getSession();
+    const currentSession = sessionRes.data.session;
+    if (currentSession?.user && isPasswordRecovery) {
+      sessionUser = currentSession.user;
+    }
+
+    // If no active recovery session exists, the email verification code or link is strictly required
+    if (!sessionUser) {
+      if (!cleanCode && !isFullUrl) {
+        throw new Error('Please enter the verification code or paste the reset link from your email.');
       }
-    }
 
-    let verifiedUser: any = null;
-
-    // 1. Try token_hash verification with Supabase (used when link token or pkce_ is pasted)
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: cleanCode,
-        type: 'recovery',
-      } as any);
-      if (!error && data?.user) {
-        verifiedUser = data.user;
-      }
-    } catch (e) {
-      console.warn('token_hash recovery attempt:', e);
-    }
-
-    // 2. Try email + token (used when 6-digit numeric OTP is entered)
-    if (!verifiedUser && cleanEmail) {
-      try {
-        const { data, error } = await supabase.auth.verifyOtp({
-          email: cleanEmail,
-          token: cleanCode,
-          type: 'recovery',
-        });
-        if (!error && data?.user) {
-          verifiedUser = data.user;
+      // Extract token if user pasted full email link
+      if (cleanCode.includes('token=') || cleanCode.includes('token_hash=')) {
+        try {
+          const url = new URL(cleanCode);
+          const extracted = url.searchParams.get('token_hash') || url.searchParams.get('token');
+          if (extracted) cleanCode = extracted;
+        } catch {
+          const match = cleanCode.match(/(?:token_hash|token)=([^&#]+)/);
+          if (match && match[1]) cleanCode = match[1];
         }
-      } catch (e) {
-        console.warn('email token verify attempt:', e);
       }
-    }
 
-    // 3. Try token_hash with 'email' type
-    if (!verifiedUser) {
+      let verifyErrorMsg = '';
+
+      // 1. Try OTP verification with token_hash (from email link or hash)
       try {
         const { data, error } = await supabase.auth.verifyOtp({
           token_hash: cleanCode,
-          type: 'email',
+          type: 'recovery',
         } as any);
         if (!error && data?.user) {
-          verifiedUser = data.user;
+          sessionUser = data.user;
+        } else if (error) {
+          verifyErrorMsg = error.message;
         }
-      } catch (e) {
-        // Ignore
+      } catch (e: any) {
+        verifyErrorMsg = e?.message || 'Token verification failed';
       }
-    }
 
-    // 4. If full URL was pasted, try exchanging it
-    if (!verifiedUser && isFullUrl && fullUrl) {
-      try {
-        await fetch(fullUrl, { method: 'GET', mode: 'no-cors' });
-        const session = (await supabase.auth.getSession()).data.session;
-        if (session?.user) {
-          verifiedUser = session.user;
-        }
-      } catch (e) {
-        // Ignore
-      }
-    }
-
-    // 5. Check if current session is active from clicking the recovery link in email
-    if (!verifiedUser) {
-      const session = (await supabase.auth.getSession()).data.session;
-      if (session?.user) {
-        verifiedUser = session.user;
-      }
-    }
-
-    // 6. If OTP token failed/expired, try signing in with the provided password or creating account
-    if (!verifiedUser && cleanEmail && newPassword) {
-      try {
-        const { data: signData, error: signErr } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password: newPassword,
-        });
-        if (!signErr && signData?.user) {
-          verifiedUser = signData.user;
-        }
-      } catch (e) {
-        // Try sign up if user did not exist
+      // 2. Try email + 6-digit numeric OTP code
+      if (!sessionUser && cleanEmail) {
         try {
-          const { data: regData, error: regErr } = await supabase.auth.signUp({
+          const { data, error } = await supabase.auth.verifyOtp({
             email: cleanEmail,
-            password: newPassword,
-            options: {
-              data: { full_name: cleanEmail.split('@')[0] },
-            },
+            token: cleanCode,
+            type: 'recovery',
           });
-          if (!regErr && regData?.user) {
-            verifiedUser = regData.user;
+          if (!error && data?.user) {
+            sessionUser = data.user;
+          } else if (error) {
+            verifyErrorMsg = error.message;
           }
-        } catch {
-          // Ignore
+        } catch (e: any) {
+          verifyErrorMsg = e?.message || 'Email OTP verification failed';
         }
+      }
+
+      // STRICT SECURITY CHECK:
+      // If code verification did not produce an authenticated session from Supabase, REJECT!
+      // NEVER allow arbitrary password changing without valid email OTP.
+      if (!sessionUser) {
+        throw new Error(
+          verifyErrorMsg ||
+          'Invalid or expired verification code. Password was not changed. Please request a new link.'
+        );
       }
     }
 
-    if (!verifiedUser) {
-      throw new Error('This reset link has expired. You can sign in directly or enter workspace below!');
-    }
+    // Update password securely in Supabase
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
 
-    // 7. Update user password in Supabase if session exists
-    try {
-      await supabase.auth.updateUser({
-        password: newPassword,
-      });
-    } catch (e) {
-      // User may already have updated password during sign in
+    if (updateError) {
+      throw new Error(updateError.message || 'Failed to update password.');
     }
 
     setIsPasswordRecovery(false);
 
-    // Automatically set user session
+    // Refresh user state
     const appUser: AppUser = {
-      uid: verifiedUser.id,
-      email: verifiedUser.email || cleanEmail,
-      displayName: verifiedUser.user_metadata?.full_name || cleanEmail.split('@')[0],
-      photoURL: verifiedUser.user_metadata?.avatar_url || null,
+      uid: sessionUser.id,
+      email: sessionUser.email || cleanEmail,
+      displayName: sessionUser.user_metadata?.full_name || cleanEmail.split('@')[0],
+      photoURL: sessionUser.user_metadata?.avatar_url || null,
       isAnonymous: false,
     };
     setUser(appUser);
