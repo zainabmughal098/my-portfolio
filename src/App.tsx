@@ -106,7 +106,19 @@ function PortfolioApp() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMyResumesOpen, setIsMyResumesOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState<boolean>(false);
+  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState<boolean>(() => {
+    try {
+      // Don't show intro tour when opening a standalone shared resume preview
+      const params = new URLSearchParams(window.location.search);
+      const isStandalone = params.get('view') === 'preview' || params.get('view') === 'resume';
+      if (isStandalone) return false;
+
+      // Always open App Tour on start!
+      return true;
+    } catch {
+      return true;
+    }
+  });
   const [currentTemplateId, setCurrentTemplateId] = useState<string>('tech-architect');
 
   // Inline resume rename state
@@ -249,21 +261,10 @@ function PortfolioApp() {
   const isInitialMount = useRef<boolean>(true);
   const isSwitchingResumeRef = useRef<boolean>(false);
 
-  // Track login state to launch App Tour immediately after signing in
-  const prevUserUidRef = useRef<string | null>(null);
-
+  // When user logs in with a real account, dismiss the tour and fetch cloud resume
   useEffect(() => {
-    if (user && user.uid !== prevUserUidRef.current) {
-      const tourCompletedKey = `foliocraft_tour_completed_${user.uid}`;
-      const hasCompleted = localStorage.getItem(tourCompletedKey);
-      if (!hasCompleted) {
-        // Automatically launch App Tour right after signing in!
-        setIsWalkthroughOpen(true);
-        setIsAuthModalOpen(false);
-      }
-      prevUserUidRef.current = user.uid;
-    } else if (!user) {
-      prevUserUidRef.current = null;
+    if (user && !user.isAnonymous) {
+      setIsWalkthroughOpen(false);
     }
   }, [user]);
 
@@ -696,44 +697,40 @@ function PortfolioApp() {
         isOpen={isWalkthroughOpen}
         onClose={() => {
           setIsWalkthroughOpen(false);
-          // Transition smoothly into Basic Info / Details editor
           setViewMode('editor');
-          if (user) {
-            localStorage.setItem(`foliocraft_tour_completed_${user.uid}`, 'true');
+          // Immediately show Sign In / Create Account right after the tour!
+          if (!user || user.isAnonymous) {
+            setIsAuthModalOpen(true);
           }
         }}
         onStartBlank={() => {
           handleStartBlank();
           setIsWalkthroughOpen(false);
           setViewMode('editor');
-          if (user) {
-            localStorage.setItem(`foliocraft_tour_completed_${user.uid}`, 'true');
+          // Immediately show Sign In / Create Account right after the tour!
+          if (!user || user.isAnonymous) {
+            setIsAuthModalOpen(true);
           }
         }}
         onLoadDemo={() => {
           handleLoadDemo();
           setIsWalkthroughOpen(false);
           setViewMode('editor');
-          if (user) {
-            localStorage.setItem(`foliocraft_tour_completed_${user.uid}`, 'true');
+          // Immediately show Sign In / Create Account right after the tour!
+          if (!user || user.isAnonymous) {
+            setIsAuthModalOpen(true);
           }
         }}
       />
 
-      {/* Google Login & Cloud Backup Modal */}
+      {/* Sign In & Create Account Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => {
           setIsAuthModalOpen(false);
-          const guestTourSeen = localStorage.getItem('foliocraft_walkthrough_seen');
-          if (!guestTourSeen) {
-            setIsWalkthroughOpen(true);
-          }
         }}
         onSuccess={() => {
           setIsAuthModalOpen(false);
-          // Launch App Tour immediately after sign-in!
-          setIsWalkthroughOpen(true);
         }}
         canDismiss={true}
       />

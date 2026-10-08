@@ -151,11 +151,6 @@ export const AppWalkthrough: React.FC<AppWalkthroughProps> = ({
   const isLast = currentStepIndex === STEPS.length - 1;
 
   const handleDismiss = () => {
-    try {
-      localStorage.setItem('foliocraft_walkthrough_seen', 'true');
-    } catch (e) {
-      console.warn('Storage save warning', e);
-    }
     onClose();
   };
 
