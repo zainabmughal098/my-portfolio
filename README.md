@@ -1,117 +1,117 @@
-# FolioCraft — Professional Portfolio & Resume Builder
+# FolioCraft — Portfolio & ATS Resume Builder
 
 [![React](https://img.shields.io/badge/React-19.0-61dafb?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
-[![Vite](https://img.shields.io/badge/Vite-6.0+-646cff?style=flat-square&logo=vite)](https://vitejs.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=flat-square)](LICENSE)
+[![Express](https://img.shields.io/badge/Express-Node.js-22c55e?style=flat-square&logo=node.js)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Drizzle-336791?style=flat-square&logo=postgresql)](https://orm.drizzle.team/)
+[![Supabase](https://img.shields.io/badge/Supabase-Auth-3ecf8e?style=flat-square&logo=supabase)](https://supabase.com/)
+[![Three.js](https://img.shields.io/badge/Three.js-3D_WebGL-000000?style=flat-square&logo=three.js)](https://threejs.org/)
 
-**FolioCraft** is an all-in-one developer and designer portfolio platform and ATS resume builder. Create, customize, and publish your personal portfolio and download publication-ready resumes with zero backend setup.
+**FolioCraft** is a full-stack web application designed to solve a common problem for developers and designers: maintaining both an online portfolio and a job-application-ready resume. Instead of duplicating work across multiple tools, FolioCraft uses a single unified input to instantly generate an interactive web portfolio, responsive multi-device previews, and a recruiter-ready ATS PDF resume.
+
+Built and designed by **Zainab Salman**.
 
 ---
 
-## ✨ Features
+## 🌟 Key Features
 
-### 🖥️ 1. Real-Time Split-Screen Studio
-- **Live Preview:** See changes reflect instantly as you type.
-- **Multi-Device Simulator:** Test your site across Desktop (`1440px`), Tablet (`768px`), and Mobile (`375px`) viewports.
-- **Full Responsiveness:** Optimized for desktop computers, laptops, iPads, tablets, and smartphones (iOS & Android) with a dedicated thumb-friendly mobile bottom navigation bar.
-
-### 📄 2. ATS Resume Studio & Direct PDF Export
+### 📄 ATS Resume Studio & Vector PDF Export
 - **4 Professional Templates:**
-  - *Modern Minimalist* — Clean, contemporary layout with subtle accent borders.
-  - *Tech Architect* — Compact, high-density two-column layout ideal for engineering leads.
-  - *Harvard Classic* — Traditional serif typography, trusted for corporate, academic, and executive roles.
-  - *Executive Modern* — Elegant typography with balanced vertical rhythm.
-- **Smart 1-Page / 2-Page Fitting:** Dynamic scaling algorithm ensures your content fits standard A4/US Letter sheets without awkward overflowing pages.
-- **Live Page-Break Boundary Guides:** Visual markers show exactly where pages break before you print or download.
-- **Vector & High-DPI PDF Generation:** Powered by `html2canvas-pro` and `jspdf` with full CSS Color Module Level 4 (`oklch`) support.
-- **Plain-Text ATS Export:** 1-click copy formatted plain-text for easy pasting into automated job application forms.
+  - **Modern Minimalist:** Clean layout with subtle divider borders and balanced vertical rhythm.
+  - **Tech Architect:** High-density two-column layout optimized for software engineers and technical leads.
+  - **Harvard Classic:** Traditional serif typography trusted for corporate, academic, and executive roles.
+  - **Executive Modern:** Polished header hierarchy with prominent impact metrics.
+- **Strict 1-Page & 2-Page Fitting:** Dynamic container height calculation with visual boundary warnings preventing awkward page overflows.
+- **High-DPI PDF Generation:** Vector-quality export powered by `html2canvas-pro` and `jspdf` with full support for modern CSS color formats (`oklch`).
+- **Plain-Text ATS Copy:** One-click copy formatted plain-text for easy pasting into applicant tracking systems (Workday, Greenhouse, Lever).
 
-### 🎨 3. Design Archetypes & Customization
-- **Clean Canvas by Default:** Starts with a clean, blank template so shared links never display confusing mock data.
-- **Inspirational Presets:** Switch anytime to curated archetypes (*Product Designer*, *Full-Stack Engineer*, *Art Director*, *Open Source Contributor*).
-- **Theme Engine:** Customize typography (Sans, Serif, Display, Mono), accent colors, border radiuses, and density.
-- **Section Controls:** Freely toggle or reorder Hero, About, Projects, Experience, Education, Skills, Key Numbers (Metrics), Testimonials, and Contact.
+### 🖥️ Real-Time Responsive Portfolio Simulator
+- **Live Split-Screen Editor:** Real-time updates as you type your experience, projects, skills, and bio.
+- **Multi-Device Frame Testing:** Switch seamlessly between:
+  - **Desktop Viewport** (`1440px`)
+  - **iPad / Tablet Frame** (`768px`)
+  - **Mobile Phone Frame** (`375px`)
+- **Mobile-First Experience:** Includes a thumb-friendly bottom navigation bar and responsive drawers for smaller screens.
 
-### 🚀 4. Deployment & Export Tools
-- **One-Click Standalone HTML:** Download your entire portfolio as a self-contained, offline-ready `.html` file with embedded styles.
-- **GitHub Sync Modal:** Direct instructions and workflow to push to GitHub repositories and deploy on Vercel, Netlify, or GitHub Pages.
-- **Social SEO & OpenGraph:** Live preview of how your portfolio card appears when shared on Twitter/X, LinkedIn, and WhatsApp.
+### 🌐 3D Interactive Onboarding (Three.js)
+- **WebGL Background Scene:** Custom Three.js canvas featuring dynamic starfield particles, orbiting geometric clusters, and ambient lighting.
+- **Guided Product Tour:** Step-by-step introduction to FolioCraft's unified input, theme switcher, ATS formatting, and export workflows.
+
+### 🗄️ Multi-Resume Cloud Storage & Auto-Sync
+- **PostgreSQL Database:** Powered by Drizzle ORM and Express to save, update, rename, and manage multiple resumes per account.
+- **Debounced Auto-Save:** Automatically syncs changes in the background so your work is never lost.
+- **Public Share Links:** Share a direct preview link (`/api/public/resume/:id`) with recruiters or clients without requiring them to log in.
+
+### 🔐 Authentication & Instant Guest Access
+- **Supabase Authentication:** Secure email and password login and account creation.
+- **Instant Guest Mode:** Start building and designing immediately without signing up—all data works locally with zero friction.
+
+### 🚀 Standalone HTML & Social Sharing
+- **Single-File HTML Export:** Download your entire portfolio as a self-contained `.html` file that runs completely offline with embedded CSS.
+- **Social SEO Preview:** Live simulator previewing how your portfolio link card looks on Twitter/X, LinkedIn, and WhatsApp.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/)
-- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
-- **Icons:** [Lucide React](https://lucide.dev/)
-- **PDF Engine:** [html2canvas-pro](https://github.com/niklasvh/html2canvas) & [jsPDF](https://github.com/parallax/jsPDF)
-- **Tooling:** [Vite](https://vitejs.dev/)
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) (v18 or higher) installed on your machine.
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/foliocraft.git
-   cd foliocraft
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start the local development server:**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) (or the port displayed in your terminal) in your browser.
-
-4. **Build for production:**
-   ```bash
-   npm run build
-   ```
-   The production-ready assets will be created in the `dist/` directory.
+- **Frontend:** React 19, TypeScript
+- **Styling:** Tailwind CSS v4, Lucide React icons
+- **3D Graphics:** Three.js (WebGL)
+- **PDF Engine:** jsPDF, html2canvas-pro
+- **Backend:** Node.js, Express 4.x
+- **Database:** PostgreSQL, Drizzle ORM
+- **Authentication:** Supabase Auth
+- **Bundler & Dev Server:** Vite
 
 ---
 
 ## 📂 Project Structure
 
-```text
-├── src/
-│   ├── components/            # UI Components & Modules
-│   │   ├── EditorPanel.tsx    # Content editor (Profile, Projects, Experience, Stats)
-│   │   ├── ResumeView.tsx     # Resume builder with ATS templates & PDF engine
-│   │   ├── PortfolioRenderer.tsx # Interactive portfolio presentation component
-│   │   ├── DeviceFrame.tsx    # Responsive viewport frame (Desktop / Tablet / Mobile)
-│   │   ├── MobileBottomNav.tsx # Dedicated navigation for mobile and tablet screens
-│   │   ├── Navbar.tsx         # Desktop top navigation and actions hub
-│   │   ├── ThemeStudio.tsx    # Theme, font, and color configuration
-│   │   ├── ExportModal.tsx    # JSON and Standalone HTML export dialog
-│   │   └── SocialSharePreview.tsx # OpenGraph & Twitter social card preview
-│   ├── data/
-│   │   └── presets.ts         # Blank starter canvas & archetype demo presets
-│   ├── types/
-│   │   └── portfolio.ts       # TypeScript schemas and data structures
-│   ├── utils/
-│   │   └── exportHtml.ts      # Standalone single-file HTML generator
-│   ├── App.tsx                # Main app state controller & view router
-│   ├── main.tsx               # App entry point
-│   └── index.css              # Global styles & Tailwind CSS v4 directives
-├── public/                    # Static assets & icons
-├── metadata.json              # App configuration & permissions
-├── package.json               # Dependencies & scripts
-└── README.md                  # Project documentation
-```
+- **src/components**
+  - `AppWalkthrough.tsx` : Step-by-step 3D product tour
+  - `ThreeCanvas.tsx` : Three.js WebGL scene & particle orbits
+  - `AuthModal.tsx` : Supabase sign-in, signup & guest dialog
+  - `EditorPanel.tsx` : Unified input (Profile, Work, Skills, Projects)
+  - `ResumeView.tsx` : 4 ATS templates, spacing & PDF export
+  - `PortfolioRenderer.tsx` : Live web portfolio presentation engine
+  - `DeviceFrame.tsx` : Responsive desktop/tablet/mobile simulator
+  - `MobileBottomNav.tsx` : Mobile thumb navigation bar
+  - `Navbar.tsx` : Top navigation bar & action menu
+  - `MyResumesModal.tsx` : Multi-resume switcher & cloud manager
+  - `SharePreviewModal.tsx` : Public shareable link generator
+  - `ExportModal.tsx` : Standalone HTML bundle exporter
+  - `SocialSharePreview.tsx` : OpenGraph & Twitter social card tester
+
+- **src/context**
+  - `AuthContext.tsx` : Supabase auth state & cloud sync engine
+
+- **src/data**
+  - `presets.ts` : Clean blank canvas & industry archetype presets
+  - `templates.ts` : Field templates & sample data structures
+
+- **src/db**
+  - `schema.ts` : PostgreSQL Drizzle database schema
+  - `drizzle.config.ts` : Database configuration
+
+- **src/types**
+  - `portfolio.ts` : TypeScript data models
+
+- **src/utils**
+  - `exportHtml.ts` : Bundles self-contained offline HTML
+
+- **Root & Configuration**
+  - `App.tsx` : Main application controller & routing
+  - `main.tsx` : Client entry point
+  - `index.css` : Global styles & Tailwind CSS
+  - `server.ts` : Express backend server
+  - `vite.config.ts` : Vite build configuration
+  - `package.json` : Dependencies & build scripts
 
 ---
 
+## 👩‍💻 Developed By
 
+**Zainab Salman**  
+- **Role:** Full-Stack Developer  
+- **Email:** zainabsalman992@gmail.com  
